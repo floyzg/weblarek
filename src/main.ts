@@ -5,78 +5,50 @@ import { Cart } from "./components/models/Cart";
 import { Order } from "./components/models/Order";
 import { Api } from "./components/base/Api";
 import { Server } from "./components/base/Server";
-import { apiProducts } from "./utils/data";
+import { EventEmitter } from "./components/base/Events";
 import { API_URL } from "./utils/constants";
+
+import { Gallery } from "./components/view/Gallery";
+import { Modal } from "./components/view/Modal";
+import { Basket } from "./components/view/Basket";
+import { Header } from "./components/view/Header";
+import { Presenter } from "./components/presenter/Presenter";
 
 const api = new Api(API_URL);
 const server = new Server(api);
+const events = new EventEmitter();
 
 const productsModel = new Products();
 const cartModel = new Cart();
 const orderModel = new Order();
 
-const exampleIDProduct = "854cef69-976d-4c2a-a18c-2aa45046c390";
-console.log("Testing Products model");
-productsModel.setItems(apiProducts.items);
-console.log("All Products:", productsModel.getItems());
-console.log(
-  "Product with ID '854cef69-976d-4c2a-a18c-2aa45046c390':",
-  productsModel.getProductById(exampleIDProduct),
+const galleryContainer = document.querySelector(".gallery") as HTMLElement;
+const modalContainer = document.querySelector(".modal") as HTMLElement;
+const headerContainer = document.querySelector(".header") as HTMLElement;
+
+// Создаём контейнер для корзины из шаблона
+const basketTemplate = document.querySelector("#basket") as HTMLTemplateElement;
+const basketContainer = basketTemplate.content.cloneNode(true) as HTMLElement;
+
+const gallery = new Gallery(galleryContainer, events);
+const modal = new Modal(modalContainer, events);
+const basket = new Basket(basketContainer, events);
+const header = new Header(headerContainer, events);
+
+void new Presenter(
+  productsModel,
+  cartModel,
+  orderModel,
+  events,
+  gallery,
+  modal,
+  basket,
+  header,
 );
-
-if (productsModel.getProductById(exampleIDProduct)) {
-  productsModel.setSelectedProduct(
-    productsModel.getProductById("854cef69-976d-4c2a-a18c-2aa45046c390")!,
-  );
-  console.log("Selected Product:", productsModel.getSelectedProduct());
-}
-
-console.log("Testing Cart model");
-cartModel.addProduct(apiProducts.items[0]);
-cartModel.addProduct(apiProducts.items[1]);
-console.log("Cart Products after adding 2 items:", cartModel.getProducts());
-console.log(
-  "Is product with ID '854cef69-976d-4c2a-a18c-2aa45046c390' in cart?",
-  cartModel.isProductInCart(exampleIDProduct),
-);
-console.log("Total Price:", cartModel.getTotalPrice());
-console.log("Item Count:", cartModel.getItemCount());
-cartModel.removeProduct(exampleIDProduct);
-console.log(
-  "Cart Products after removing product with ID '854cef69-976d-4c2a-a18c-2aa45046c390':",
-  cartModel.getProducts(),
-);
-cartModel.clearCart();
-console.log("Cart Products after clearing cart:", cartModel.getProducts());
-
-console.log("Testing Order model");
-orderModel.setOrderData({
-  payment: "card",
-  email: "",
-  phone: "+1234567890",
-  address: "123 Main St",
-});
-console.log("Order Data:", orderModel.getOrderData());
-console.log("Validation Errors:", orderModel.validateOrderData());
-orderModel.clearOrderData();
-console.log("Order Data after clearing:", orderModel.getOrderData());
-
-console.log("Testing Server model");
 
 server
   .getProducts()
-  .then((productsFromServer) => {
-    console.log("✅");
-    console.log("Count products:", productsFromServer.length);
-    console.log("Products:", productsFromServer);
-
-    // сохраняем полученные с сервера товары в Products
-    productsModel.setItems(productsFromServer);
-
-    console.log("Products from model:", productsModel.getItems());
+  .then((products) => {
+    events.emit("products:loaded", { products });
   })
-  .catch((error) =>
-    console.error(`Error fetching products from server: ${error}`),
-  );
-
-console.log("Finally! :D");
+  .catch((error) => console.error(`Ошибка загрузки товаров: ${error}`));

@@ -1,6 +1,10 @@
 import { Card } from "./Card";
 import { IEvents } from "../../base/Events";
 
+/**
+ * Карточка товара в корзине.
+ * Отвечает за отображение товара в списке корзины и удаление.
+ */
 export class CardBasket extends Card {
   protected index: HTMLElement;
   protected button: HTMLButtonElement;
@@ -21,10 +25,20 @@ export class CardBasket extends Card {
     });
   }
 
+  /**
+   * Устанавливает порядковый номер товара в корзине.
+   * @param {number} index - Индекс в списке.
+   */
   setIndex(index: number): void {
     this.index.textContent = String(index);
   }
 
+  /**
+   * Отображает карточку товара в корзине.
+   * @param {any} product - Данные товара.
+   * @param {number} index - Индекс товара.
+   * @returns {HTMLElement} Элемент карточки.
+   */
   display(product: any, index: number): HTMLElement {
     this.setTitle(product.title);
     this.setPrice(product.price);

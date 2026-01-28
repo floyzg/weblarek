@@ -2,6 +2,10 @@ import { Card } from "./Card";
 import { IEvents } from "../../base/Events";
 import { IProduct } from "../../../types";
 
+/**
+ * Карточка товара для предпросмотра.
+ * Отвечает за отображение подробной информации и добавление в корзину.
+ */
 export class CardPreview extends Card {
   protected description: HTMLElement;
   protected button: HTMLButtonElement;
@@ -24,18 +28,35 @@ export class CardPreview extends Card {
     });
   }
 
+  /**
+   * Устанавливает описание товара.
+   * @param {string} description - Описание.
+   */
   setDescription(description: string): void {
     this.description.textContent = description;
   }
 
+  /**
+   * Устанавливает текст кнопки действия.
+   * @param {string} text - Текст кнопки.
+   */
   setButtonText(text: string): void {
     this.button.textContent = text;
   }
 
+  /**
+   * Устанавливает состояние кнопки (активна/неактивна).
+   * @param {boolean} disabled - true, если кнопка неактивна.
+   */
   setButtonState(disabled: boolean): void {
     this.button.disabled = disabled;
   }
 
+  /**
+   * Отображает карточку предпросмотра товара.
+   * @param {IProduct} product - Данные товара.
+   * @returns {HTMLElement} Элемент карточки.
+   */
   display(product: IProduct): HTMLElement {
     this.setTitle(product.title);
     this.setImageUrl(product.image, product.title);

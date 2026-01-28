@@ -1,6 +1,10 @@
 import { Form } from "./Form";
 import { IEvents } from "../../base/Events";
 
+/**
+ * Форма оформления заказа.
+ * Управляет выбором оплаты и адреса, валидацией и отправкой.
+ */
 export class OrderForm extends Form {
   protected paymentButtons: HTMLButtonElement[];
   protected addressInput: HTMLInputElement;
@@ -38,6 +42,10 @@ export class OrderForm extends Form {
     });
   }
 
+  /**
+   * Отмечает выбранный способ оплаты.
+   * @param {string} method - Название метода оплаты.
+   */
   selectPayment(method: string): void {
     this.paymentButtons.forEach((btn) => {
       if (btn.name === method) {
@@ -48,6 +56,10 @@ export class OrderForm extends Form {
     });
   }
 
+  /**
+   * Валидирует форму заказа.
+   * Блокирует кнопку отправки и отображает ошибки.
+   */
   validateForm(): void {
     const payment = this.paymentButtons.find((btn) =>
       btn.classList.contains("button_alt-active"),
@@ -66,6 +78,10 @@ export class OrderForm extends Form {
     }
   }
 
+  /**
+   * Получает данные формы заказа.
+   * @returns {Record<string, string>} Способ оплаты и адрес.
+   */
   getData(): Record<string, string> {
     const payment = this.paymentButtons.find((btn) =>
       btn.classList.contains("button_alt-active"),
@@ -76,6 +92,9 @@ export class OrderForm extends Form {
     };
   }
 
+  /**
+   * Обрабатывает отправку формы заказа.
+   */
   protected onSubmit(): void {
     this.validateForm();
     if (!this.submitBtn.disabled) {

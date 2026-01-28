@@ -1,6 +1,10 @@
 import { Card } from "./Card";
 import { IEvents } from "../../base/Events";
 
+/**
+ * Карточка товара в каталоге.
+ * Отвечает за отображение товара и обработку выбора.
+ */
 export class CardCatalog extends Card {
   protected events: IEvents;
 

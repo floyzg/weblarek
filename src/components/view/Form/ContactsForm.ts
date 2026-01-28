@@ -1,6 +1,10 @@
 import { Form } from "./Form";
 import { IEvents } from "../../base/Events";
 
+/**
+ * Форма ввода контактных данных покупателя.
+ * Валидирует email и телефон, отправляет данные заказа.
+ */
 export class ContactsForm extends Form {
   protected emailInput: HTMLInputElement;
   protected phoneInput: HTMLInputElement;
@@ -33,6 +37,10 @@ export class ContactsForm extends Form {
     });
   }
 
+  /**
+   * Валидирует форму контактов.
+   * Блокирует кнопку отправки и отображает ошибки.
+   */
   validateForm(): void {
     const email = this.emailInput.value.trim();
     const phone = this.phoneInput.value.trim();
@@ -67,6 +75,10 @@ export class ContactsForm extends Form {
     this.submitBtn.disabled = false;
   }
 
+  /**
+   * Получает данные формы контактов.
+   * @returns {Record<string, string>} Email и телефон.
+   */
   getData(): Record<string, string> {
     return {
       email: this.emailInput.value,
@@ -74,6 +86,9 @@ export class ContactsForm extends Form {
     };
   }
 
+  /**
+   * Обрабатывает отправку формы контактов.
+   */
   protected onSubmit(): void {
     this.validateForm();
     if (!this.submitBtn.disabled) {

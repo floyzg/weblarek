@@ -1,3 +1,7 @@
+/**
+ * Точка входа приложения.
+ * Инициализирует модели, представления, Presenter и запускает загрузку данных.
+ */
 import "./scss/styles.scss";
 
 import { Products } from "./components/models/Products";

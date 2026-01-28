@@ -4,6 +4,10 @@ import { IProduct } from "../../types";
 import { CardCatalog } from "./Card/CardCatalog";
 import { CDN_URL } from "../../utils/constants";
 
+/**
+ * Представление галереи товаров.
+ * Отвечает за отображение каталога товаров.
+ */
 export class Gallery extends Component<HTMLElement> {
   protected events: IEvents;
 
@@ -12,6 +16,11 @@ export class Gallery extends Component<HTMLElement> {
     this.events = events;
   }
 
+  /**
+   * Отображает список товаров в галерее.
+   * @param {IProduct[]} products - Массив товаров.
+   * @returns {HTMLElement} Элемент галереи.
+   */
   display(products: IProduct[]): HTMLElement {
     this.container.innerHTML = "";
 

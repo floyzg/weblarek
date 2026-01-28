@@ -12,6 +12,10 @@ import { ContactsForm } from "../view/Form/ContactsForm";
 import { Success } from "../view/Success";
 import { IProduct } from "../../types";
 
+/**
+ * Presenter — центральный управляющий слой приложения.
+ * Связывает модели и представления через событийную систему.
+ */
 export class Presenter {
   protected products: Products;
   protected cart: Cart;
@@ -24,6 +28,17 @@ export class Presenter {
   protected header: Header;
   protected currentBasket: Basket | null = null;
 
+  /**
+   * Создаёт Presenter и связывает все основные компоненты приложения.
+   * @param {Products} products
+   * @param {Cart} cart
+   * @param {Order} order
+   * @param {EventEmitter} events
+   * @param {Gallery} gallery
+   * @param {Modal} modal
+   * @param {Basket} basket
+   * @param {Header} header
+   */
   constructor(
     products: Products,
     cart: Cart,
@@ -46,6 +61,9 @@ export class Presenter {
     this.bindEvents();
   }
 
+  /**
+   * Привязывает обработчики событий между слоями приложения.
+   */
   protected bindEvents(): void {
     // Загрузка товаров
     this.events.on("products:loaded", (data: { products: IProduct[] }) => {
@@ -147,12 +165,19 @@ export class Presenter {
     });
   }
 
+  /**
+   * Обновляет отображение корзины и счётчик в header.
+   */
   protected updateBasketView(): void {
     this.basket.display(this.cart);
     this.header.display();
     this.header.setBasketCounter(this.cart.getItemCount());
   }
 
+  /**
+   * Открывает предпросмотр товара в модальном окне.
+   * @param {IProduct} product - Товар для предпросмотра.
+   */
   protected openPreview(product: IProduct): void {
     const cardTemplate = document.querySelector(
       "#card-preview",
@@ -172,6 +197,9 @@ export class Presenter {
     this.modal.open();
   }
 
+  /**
+   * Открывает форму ввода контактных данных.
+   */
   protected openContactsForm(): void {
     const contactsTemplate = document.querySelector(
       "#contacts",
@@ -186,6 +214,9 @@ export class Presenter {
     this.modal.setContent(contactsElement);
   }
 
+  /**
+   * Завершает оформление заказа и показывает успешное оформление.
+   */
   protected submitOrder(): void {
     const successTemplate = document.querySelector(
       "#success",

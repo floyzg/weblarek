@@ -1,6 +1,10 @@
 import { Component } from "../../base/Component";
 import { CDN_URL } from "../../../utils/constants";
 
+/**
+ * Базовый класс карточки товара.
+ * Отвечает за отображение информации о товаре.
+ */
 export class Card extends Component<HTMLElement> {
   protected title: HTMLElement;
   protected image: HTMLImageElement;
@@ -19,15 +23,28 @@ export class Card extends Component<HTMLElement> {
     ) as HTMLElement;
   }
 
+  /**
+   * Устанавливает заголовок карточки.
+   * @param {string} title - Название товара.
+   */
   setTitle(title: string): void {
     this.title.textContent = title;
   }
 
+  /**
+   * Устанавливает изображение товара.
+   * @param {string} image - Имя файла изображения.
+   * @param {string} alt - Альтернативный текст.
+   */
   setImageUrl(image: string, alt: string): void {
     this.image.src = `${CDN_URL}/${image}`;
     this.image.alt = alt;
   }
 
+  /**
+   * Устанавливает цену товара.
+   * @param {number | null} price - Цена товара.
+   */
   setPrice(price: number | null): void {
     if (price === null) {
       this.price.textContent = "Бесценно";
@@ -36,6 +53,10 @@ export class Card extends Component<HTMLElement> {
     }
   }
 
+  /**
+   * Устанавливает категорию товара и соответствующий класс.
+   * @param {string} category - Категория.
+   */
   setCategory(category: string): void {
     const categoryMap: Record<string, string> = {
       "софт-скил": "soft",

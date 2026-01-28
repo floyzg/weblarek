@@ -1,6 +1,10 @@
 import { Component } from "../base/Component";
 import { IEvents } from "../base/Events";
 
+/**
+ * Модальное окно.
+ * Управляет отображением и содержимым модального окна.
+ */
 export class Modal extends Component<HTMLElement> {
   protected closeButton: HTMLButtonElement;
   protected content: HTMLElement;
@@ -27,19 +31,34 @@ export class Modal extends Component<HTMLElement> {
     });
   }
 
+  /**
+   * Открывает модальное окно.
+   */
   open(): void {
     this.container.classList.add("modal_active");
   }
 
+  /**
+   * Закрывает модальное окно.
+   */
   close(): void {
     this.container.classList.remove("modal_active");
   }
 
+  /**
+   * Устанавливает содержимое модального окна.
+   * @param {HTMLElement} content - Новый контент.
+   */
   setContent(content: HTMLElement): void {
     this.content.innerHTML = "";
     this.content.appendChild(content);
   }
 
+  /**
+   * Отображает содержимое модального окна.
+   * @param {HTMLElement} content - Контент для отображения.
+   * @returns {HTMLElement} Элемент модального окна.
+   */
   display(content: HTMLElement): HTMLElement {
     this.setContent(content);
     return this.container;

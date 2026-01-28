@@ -1,6 +1,10 @@
 import { Component } from "../base/Component";
 import { IEvents } from "../base/Events";
 
+/**
+ * Представление шапки приложения.
+ * Отвечает за отображение кнопки корзины и счетчика.
+ */
 export class Header extends Component<HTMLElement> {
   protected basketButton: HTMLButtonElement;
   protected basketCounter: HTMLElement;
@@ -21,10 +25,18 @@ export class Header extends Component<HTMLElement> {
     });
   }
 
+  /**
+   * Устанавливает значение счетчика корзины.
+   * @param {number} count - Количество товаров.
+   */
   setBasketCounter(count: number): void {
     this.basketCounter.textContent = String(count);
   }
 
+  /**
+   * Отображает header.
+   * @returns {HTMLElement} Элемент header.
+   */
   display(): HTMLElement {
     return this.container;
   }

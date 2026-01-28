@@ -2,6 +2,10 @@ import { Component } from "../base/Component";
 import { IEvents } from "../base/Events";
 import { Cart } from "../models/Cart";
 
+/**
+ * Представление корзины.
+ * Отвечает за отображение списка товаров и итоговой суммы.
+ */
 export class Basket extends Component<HTMLElement> {
   protected list: HTMLElement;
   protected button: HTMLButtonElement;
@@ -31,6 +35,11 @@ export class Basket extends Component<HTMLElement> {
     });
   }
 
+  /**
+   * Отображает содержимое корзины.
+   * @param {Cart} cart - Модель корзины.
+   * @returns {HTMLElement} Элемент корзины.
+   */
   display(cart: Cart): HTMLElement {
     this.list.innerHTML = "";
     const items = cart.getProducts();

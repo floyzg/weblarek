@@ -1,6 +1,10 @@
 import { Component } from "../base/Component";
 import { IEvents } from "../base/Events";
 
+/**
+ * Представление успешного оформления заказа.
+ * Показывает итоговую сумму и кнопку закрытия.
+ */
 export class Success extends Component<HTMLElement> {
   protected description: HTMLElement;
   protected closeButton: HTMLButtonElement;
@@ -21,10 +25,18 @@ export class Success extends Component<HTMLElement> {
     });
   }
 
+  /**
+   * Устанавливает итоговую сумму заказа.
+   * @param {number} total - Сумма заказа.
+   */
   setTotal(total: number): void {
     this.description.textContent = `Списано ${total} синапсов`;
   }
 
+  /**
+   * Отображает окно успешного заказа.
+   * @returns {HTMLElement} Элемент окна.
+   */
   display(): HTMLElement {
     return this.container;
   }

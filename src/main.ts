@@ -1,7 +1,3 @@
-/**
- * Точка входа приложения.
- * Инициализирует модели, представления, Presenter и запускает загрузку данных.
- */
 import "./scss/styles.scss";
 
 import { Products } from "./components/models/Products";
@@ -9,50 +5,79 @@ import { Cart } from "./components/models/Cart";
 import { Order } from "./components/models/Order";
 import { Api } from "./components/base/Api";
 import { Server } from "./components/base/Server";
-import { EventEmitter } from "./components/base/Events";
+import { apiProducts } from "./utils/data";
 import { API_URL } from "./utils/constants";
-
-import { Gallery } from "./components/view/Gallery";
-import { Modal } from "./components/view/Modal";
-import { Basket } from "./components/view/Basket";
-import { Header } from "./components/view/Header";
-import { Presenter } from "./components/presenter/Presenter";
 
 const api = new Api(API_URL);
 const server = new Server(api);
-const events = new EventEmitter();
 
 const productsModel = new Products();
 const cartModel = new Cart();
 const orderModel = new Order();
 
-const galleryContainer = document.querySelector(".gallery") as HTMLElement;
-const modalContainer = document.querySelector(".modal") as HTMLElement;
-const headerContainer = document.querySelector(".header") as HTMLElement;
-
-// Создаём контейнер для корзины из шаблона
-const basketTemplate = document.querySelector("#basket") as HTMLTemplateElement;
-const basketContainer = basketTemplate.content.cloneNode(true) as HTMLElement;
-
-const gallery = new Gallery(galleryContainer, events);
-const modal = new Modal(modalContainer, events);
-const basket = new Basket(basketContainer, events);
-const header = new Header(headerContainer, events);
-
-void new Presenter(
-  productsModel,
-  cartModel,
-  orderModel,
-  events,
-  gallery,
-  modal,
-  basket,
-  header,
+const exampleIDProduct = "854cef69-976d-4c2a-a18c-2aa45046c390";
+console.log("Тестирование модели Products");
+productsModel.setItems(apiProducts.items);
+console.log("Все товары:", productsModel.getItems());
+console.log(
+  "Товар с указанным ID:",
+  productsModel.getProductById(exampleIDProduct),
 );
+
+if (productsModel.getProductById(exampleIDProduct)) {
+  productsModel.setSelectedProduct(
+    productsModel.getProductById("854cef69-976d-4c2a-a18c-2aa45046c390")!,
+  );
+  console.log("Выбранный товар:", productsModel.getSelectedProduct());
+}
+
+console.log("Тестирование модели Cart");
+cartModel.addProduct(apiProducts.items[0]);
+cartModel.addProduct(apiProducts.items[1]);
+console.log("Товары в корзине после добавления:", cartModel.getProducts());
+console.log(
+  "Находится ли товар в корзине:",
+  cartModel.isProductInCart(exampleIDProduct),
+);
+console.log("Общая стоимость:", cartModel.getTotalPrice());
+console.log("Количество товаров:", cartModel.getItemCount());
+cartModel.removeProduct(exampleIDProduct);
+console.log(
+  "Товары в корзине после удаления:",
+  cartModel.getProducts(),
+);
+cartModel.clearCart();
+console.log("Корзина после очистки:", cartModel.getProducts());
+
+console.log("Тестирование модели Order");
+orderModel.setOrderData({
+  payment: "card",
+  email: "",
+  phone: "+1234567890",
+  address: "123 Main St",
+});
+console.log("Данные заказа:", orderModel.getOrderData());
+console.log("Ошибки валидации:", orderModel.validateOrderData());
+orderModel.clearOrderData();
+console.log("Данные заказа после очистки:", orderModel.getOrderData());
+
+console.log("Тестирование сервера");
 
 server
   .getProducts()
-  .then((products) => {
-    events.emit("products:loaded", { products });
+  .then((productsFromServer) => {
+    console.log("✅");
+    console.log("Количество товаров:", productsFromServer.length);
+    console.log("Список товаров:", productsFromServer);
+
+    // сохраняем полученные с сервера товары в Products
+    productsModel.setItems(productsFromServer);
+
+    console.log("Товары, сохранённые в модели:", productsModel.getItems());
   })
-  .catch((error) => console.error(`Ошибка загрузки товаров: ${error}`));
+  .catch((error) =>
+    console.error(`Ошибка при получении товаров с сервера: ${error}`),
+  );
+
+console.log("Тестирование завершено");
+  

@@ -1,4 +1,4 @@
-import "./scss/styles.scss";
+// import "./scss/styles.scss";
 
 import { Products } from "./components/models/Products";
 import { Cart } from "./components/models/Cart";
@@ -42,10 +42,7 @@ console.log(
 console.log("Общая стоимость:", cartModel.getTotalPrice());
 console.log("Количество товаров:", cartModel.getItemCount());
 cartModel.removeProduct(exampleIDProduct);
-console.log(
-  "Товары в корзине после удаления:",
-  cartModel.getProducts(),
-);
+console.log("Товары в корзине после удаления:", cartModel.getProducts());
 cartModel.clearCart();
 console.log("Корзина после очистки:", cartModel.getProducts());
 
@@ -80,4 +77,3 @@ server
   );
 
 console.log("Тестирование завершено");
-  

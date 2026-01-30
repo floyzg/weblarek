@@ -6,7 +6,7 @@ export class Server {
   // Выборка продуктов с сервера
   async getProducts(): Promise<IProduct[]> {
     try {
-      const response = await this.api.get<{ items: IProduct[] }>("/product/");
+      const response = await this.api.get<{ items: IProduct[]; total: number }>("/product/");
       return response.items;
     } catch (error) {
       console.error("Ошибка при получении продуктов:", error);

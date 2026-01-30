@@ -47,11 +47,11 @@ export class Order {
  validateOrderData(): { [key: string]: string } {
   const errors: { [key: string]: string } = {};
 
-  if (!this.data.email || !/\S+@\S+\.\S+/.test(this.data.email)) {
+  if (!this.data.email) {
    errors.email = "Некорректный email адрес";
   }
 
-  if (!this.data.phone || !/^\+?[1-9]\d{1,14}$/.test(this.data.phone)) {
+  if (!this.data.phone) {
    errors.phone = "Некорректный номер телефона";
   }
 

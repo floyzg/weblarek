@@ -4,7 +4,7 @@ import { Products } from "./components/models/Products";
 import { Cart } from "./components/models/Cart";
 import { Order } from "./components/models/Order";
 import { Api } from "./components/base/Api";
-import { Server } from "./components/base/Server";
+import { Server } from "./components/models/Server";
 import { apiProducts } from "./utils/data";
 import { API_URL } from "./utils/constants";
 

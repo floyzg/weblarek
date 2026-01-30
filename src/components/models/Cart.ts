@@ -20,12 +20,11 @@ export class Cart {
    * @param {IProduct} product - Товар для добавления.
    */
   addProduct(product: IProduct): void {
-    if (product.price === null) {
+    if (product.price === null || this.isProductInCart(product.id)) {
       return;
     }
-    if (!this.items.find((item) => item.id === product.id)) {
-      this.items.push(product);
-    }
+
+    this.items.push(product);
   }
 
   /**

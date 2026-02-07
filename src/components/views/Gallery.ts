@@ -2,7 +2,7 @@ import { Component } from "../base/Component";
 import { IEvents } from "../base/Events";
 import { IProduct } from "../../types";
 import { CardCatalog } from "./Card/CardCatalog";
-import { CDN_URL } from "../../utils/constants";
+import { CDN_URL, categoryMap } from "../../utils/constants";
 
 /**
  * Представление галереи товаров.
@@ -28,11 +28,13 @@ export class Gallery extends Component<HTMLElement> {
       const cardElement = document.createElement("div");
       cardElement.className = "gallery__item";
 
-      const categoryClass = this.getCategoryClass(product.category);
       const imageUrl = `${CDN_URL}/${product.image}`;
+      const modifierClass =
+        (categoryMap as Record<string, string>)[product.category] || categoryMap["другое"];
+
       cardElement.innerHTML = `
         <div class="card">
-          <span class="card__category card__category_${categoryClass}">${product.category}</span>
+          <span class="card__category ${modifierClass}">${product.category}</span>
           <h2 class="card__title">${product.title}</h2>
           <img src="${imageUrl}" alt="${product.title}" class="card__image">
           <p class="card__price">${product.price === null ? "Бесценно" : product.price + " синапсов"}</p>
@@ -51,14 +53,4 @@ export class Gallery extends Component<HTMLElement> {
     return this.container;
   }
 
-  private getCategoryClass(category: string): string {
-    const map: Record<string, string> = {
-      "софт-скил": "soft",
-      "хард-скил": "hard",
-      другое: "other",
-      дополнительное: "additional",
-      кнопка: "button",
-    };
-    return map[category] || "other";
-  }
 }

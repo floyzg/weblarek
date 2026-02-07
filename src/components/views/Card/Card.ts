@@ -1,5 +1,5 @@
 import { Component } from "../../base/Component";
-import { CDN_URL } from "../../../utils/constants";
+import { CDN_URL, categoryMap } from "../../../utils/constants";
 
 /**
  * Базовый класс карточки товара.
@@ -58,14 +58,12 @@ export class Card extends Component<HTMLElement> {
    * @param {string} category - Категория.
    */
   setCategory(category: string): void {
-    const categoryMap: Record<string, string> = {
-      "софт-скил": "soft",
-      "хард-скил": "hard",
-      другое: "other",
-      дополнительное: "additional",
-      кнопка: "button",
-    };
     this.category.textContent = category;
-    this.category.className = `card__category card__category_${categoryMap[category] || "other"}`;
+
+    // categoryMap in constants already contains full modifier classes like 'card__category_soft'
+    const modifierClass =
+      (categoryMap as Record<string, string>)[category] || categoryMap["другое"];
+
+    this.category.className = `card__category ${modifierClass}`;
   }
 }

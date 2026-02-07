@@ -22,7 +22,7 @@ export class CardBasket extends Card {
     ) as HTMLButtonElement;
 
     this.button.addEventListener("click", () => {
-      this.events.emit("basket:remove", { id: this.container.dataset.id });
+      this.events.emit("basket:remove", { id: this.getId() });
     });
   }
 
@@ -44,7 +44,7 @@ export class CardBasket extends Card {
     this.setTitle(product.title);
     this.setPrice(product.price);
     this.setIndex(index);
-    this.container.dataset.id = product.id;
+    this.setId(product.id);
     return this.container;
   }
 }

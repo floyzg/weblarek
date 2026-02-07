@@ -1,11 +1,12 @@
 import { Component } from "../base/Component";
 import { IEvents } from "../base/Events";
+import type { SuccessViewData } from "../../types";
 
 /**
  * Представление успешного оформления заказа.
  * Показывает итоговую сумму и кнопку закрытия.
  */
-export class Success extends Component<HTMLElement> {
+export class Success extends Component<SuccessViewData> {
   protected description: HTMLElement;
   protected closeButton: HTMLButtonElement;
   protected events: IEvents;
@@ -32,13 +33,5 @@ export class Success extends Component<HTMLElement> {
    */
   setTotal(total: number): void {
     this.description.textContent = `Списано ${total} синапсов`;
-  }
-
-  /**
-   * Отображает окно успешного заказа.
-   * @returns {HTMLElement} Элемент окна.
-   */
-  display(): HTMLElement {
-    return this.container;
   }
 }

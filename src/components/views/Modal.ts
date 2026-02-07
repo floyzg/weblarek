@@ -1,11 +1,12 @@
 import { Component } from "../base/Component";
 import { IEvents } from "../base/Events";
+import type { ModalViewData } from "../../types";
 
 /**
  * Модальное окно.
  * Управляет отображением и содержимым модального окна.
  */
-export class Modal extends Component<HTMLElement> {
+export class Modal extends Component<ModalViewData> {
   protected closeButton: HTMLButtonElement;
   protected content: HTMLElement;
 
@@ -53,17 +54,6 @@ export class Modal extends Component<HTMLElement> {
    * @returns void
    */
   setContent(content: HTMLElement): void {
-    this.content.innerHTML = "";
-    this.content.appendChild(content);
-  }
-
-  /**
-   * Отображает содержимое модального окна.
-   * @param {HTMLElement} content - Контент для отображения.
-   * @returns {HTMLElement} Элемент модального окна.
-   */
-  display(content: HTMLElement): HTMLElement {
-    this.setContent(content);
-    return this.container;
+    this.content.replaceChildren(content);
   }
 }

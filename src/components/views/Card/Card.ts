@@ -1,26 +1,19 @@
 import { Component } from "../../base/Component";
-import { CDN_URL, categoryMap } from "../../../utils/constants";
+import type { CardViewData } from "../../../types";
 
 /**
  * Базовый класс карточки товара.
  * Отвечает за отображение информации о товаре.
  */
-export class Card extends Component<HTMLElement> {
+export class Card extends Component<CardViewData> {
   protected title: HTMLElement;
-  protected image: HTMLImageElement;
   protected price: HTMLElement;
-  protected category: HTMLElement;
+  protected productId: string | null = null;
 
   constructor(container: HTMLElement) {
     super(container);
     this.title = this.container.querySelector(".card__title") as HTMLElement;
-    this.image = this.container.querySelector(
-      ".card__image",
-    ) as HTMLImageElement;
     this.price = this.container.querySelector(".card__price") as HTMLElement;
-    this.category = this.container.querySelector(
-      ".card__category",
-    ) as HTMLElement;
   }
 
   /**
@@ -29,16 +22,6 @@ export class Card extends Component<HTMLElement> {
    */
   setTitle(title: string): void {
     this.title.textContent = title;
-  }
-
-  /**
-   * Устанавливает изображение товара.
-   * @param {string} image - Имя файла изображения.
-   * @param {string} alt - Альтернативный текст.
-   */
-  setImageUrl(image: string, alt: string): void {
-    this.image.src = `${CDN_URL}/${image}`;
-    this.image.alt = alt;
   }
 
   /**
@@ -54,16 +37,20 @@ export class Card extends Component<HTMLElement> {
   }
 
   /**
-   * Устанавливает категорию товара и соответствующий класс.
-   * @param {string} category - Категория.
+   * Сохраняет id товара внутри компонента (UI-состояние).
+   * Представление не должно брать данные из DOM (dataset).
    */
-  setCategory(category: string): void {
-    this.category.textContent = category;
+  setId(id: string): void {
+    this.productId = id;
+  }
 
-    // Используем общую карту категорий из constants, чтобы классы совпадали со стилями макета
-    const modifierClass =
-      (categoryMap as Record<string, string>)[category] || categoryMap["другое"];
-
-    this.category.className = `card__category ${modifierClass}`;
+  /**
+   * Возвращает сохранённый id товара.
+   */
+  getId(): string {
+    if (!this.productId) {
+      throw new Error("Product id is not set in Card");
+    }
+    return this.productId;
   }
 }

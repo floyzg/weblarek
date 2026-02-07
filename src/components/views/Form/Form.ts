@@ -1,15 +1,16 @@
 import { Component } from "../../base/Component";
 import { IEvents } from "../../base/Events";
+import type { FormViewData } from "../../../types";
 
 /**
  * Базовый класс формы.
- * Управляет сбором данных, валидацией и отправкой.
+ * Не хранит данные и не валидирует их — форма лишь эмитит события ввода/отправки
+ * и отображает ошибки, которые пришли из модели через презентер.
  */
-export class Form extends Component<HTMLElement> {
+export class Form extends Component<FormViewData> {
   protected inputs: HTMLInputElement[];
   protected submitButton: HTMLButtonElement;
   protected events: IEvents;
-  protected errors: Record<string, string> = {};
 
   /**
    * @param container Корневой элемент формы (из template).
@@ -32,48 +33,35 @@ export class Form extends Component<HTMLElement> {
     });
 
     this.inputs.forEach((input) => {
-      // При каждом изменении поля отправляем частичные данные в презентер
-      input.addEventListener("change", () => this.onInputChange());
+      // При каждом вводе сообщаем презентеру только изменённое поле
+      input.addEventListener("input", () => this.onInputChange(input));
     });
   }
 
   /**
-   * Отправляет данные формы через событие.
+   * Отправляет событие отправки формы (без данных).
    * @returns void
    */
   protected onSubmit(): void {
-    const data = this.getData();
-    this.events.emit("form:submit", data);
+    // Форма не является источником данных при отправке
+    this.events.emit("form:submit");
   }
 
   /**
-   * Обрабатывает изменение данных формы.
+   * Обрабатывает изменение одного поля формы.
+   * @param input Изменённый input.
    * @returns void
    */
-  protected onInputChange(): void {
-    const data = this.getData();
-    this.events.emit("form:change", data);
+  protected onInputChange(input: HTMLInputElement): void {
+    this.events.emit("form:change", { field: input.name, value: input.value });
   }
 
   /**
-   * Получает данные формы.
-   * @returns Данные всех полей.
-   */
-  getData(): Record<string, string> {
-    const data: Record<string, string> = {};
-    this.inputs.forEach((input) => {
-      data[input.name] = input.value;
-    });
-    return data;
-  }
-
-  /**
-   * Устанавливает ошибки для полей.
+   * Устанавливает ошибки для полей и отображает сообщения в .form__errors, если есть.
    * @param errors Объект ошибок.
    * @returns void
    */
   setErrors(errors: Record<string, string>): void {
-    this.errors = errors;
     this.inputs.forEach((input) => {
       if (errors[input.name]) {
         input.classList.add("form__input_error");
@@ -81,24 +69,20 @@ export class Form extends Component<HTMLElement> {
         input.classList.remove("form__input_error");
       }
     });
+
+    const errorsEl = this.container.querySelector(
+      ".form__errors",
+    ) as HTMLElement | null;
+    if (errorsEl) {
+      errorsEl.textContent = Object.values(errors).filter(Boolean).join("\n");
+    }
   }
 
   /**
-   * Очищает все ошибки формы.
-   * @returns void
+   * Управляет доступностью кнопки отправки.
+   * @param enabled true, если кнопку можно нажимать
    */
-  clearErrors(): void {
-    this.inputs.forEach((input) => {
-      input.classList.remove("form__input_error");
-    });
-    this.errors = {};
-  }
-
-  /**
-   * Отображает форму.
-   * @returns Элемент формы.
-   */
-  display(): HTMLElement {
-    return this.container;
+  setSubmitEnabled(enabled: boolean): void {
+    this.submitButton.disabled = !enabled;
   }
 }

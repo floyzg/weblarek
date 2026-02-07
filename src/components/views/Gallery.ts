@@ -1,14 +1,12 @@
 import { Component } from "../base/Component";
 import { IEvents } from "../base/Events";
-import { IProduct } from "../../types";
-import { CardCatalog } from "./Card/CardCatalog";
-import { cloneTemplate } from "../../utils/utils";
+import type { GalleryViewData } from "../../types";
 
 /**
  * Представление галереи товаров.
- * Отвечает за отображение каталога товаров.
+ * Отвечает только за отображение разметки каталога.
  */
-export class Gallery extends Component<HTMLElement> {
+export class Gallery extends Component<GalleryViewData> {
   protected events: IEvents;
 
   constructor(container: HTMLElement, events: IEvents) {
@@ -17,41 +15,10 @@ export class Gallery extends Component<HTMLElement> {
   }
 
   /**
-   * Отображает список товаров в галерее.
-   * @param {IProduct[]} products - Массив товаров.
-   * @returns {HTMLElement} Элемент галереи.
+   * Устанавливает разметку карточек каталога.
+   * Представление не строит разметку само — получает готовые элементы.
    */
-  display(products: IProduct[]): HTMLElement {
-    this.container.innerHTML = "";
-
-    products.forEach((product) => {
-      // Клонируем шаблон карточки каталога (рендерим через template, а не через innerHTML)
-      const root = cloneTemplate<HTMLElement>("#card-catalog");
-
-      // В зависимости от шаблона корнем может быть `.card` или обёртка, внутри которой есть `.card`
-      const cardEl = root.classList.contains("card")
-        ? root
-        : (root.querySelector(".card") as HTMLElement | null);
-
-      if (!cardEl) {
-        throw new Error(".card not found in #card-catalog template");
-      }
-
-      const card = new CardCatalog(cardEl, this.events);
-
-      card.setTitle(product.title);
-      card.setImageUrl(product.image, product.title);
-      card.setPrice(product.price);
-      card.setCategory(product.category);
-
-      // Сохраняем id товара в dataset — обработчик клика в CardCatalog возьмёт его оттуда
-      cardEl.dataset.id = product.id;
-
-      // Добавляем карточку в галерею
-      this.container.appendChild(root);
-    });
-
-    return this.container;
+  set items(items: HTMLElement[]) {
+    this.container.replaceChildren(...items);
   }
-
 }

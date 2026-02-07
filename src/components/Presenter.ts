@@ -1,5 +1,3 @@
-import { Api } from "./base/Api";
-import { EventEmitter, IEvents } from "./base/Events";
 import { Server } from "./models/Server";
 import { Products } from "./models/Products";
 import { Cart } from "./models/Cart";
@@ -9,21 +7,24 @@ import { Header } from "./views/Header";
 import { Gallery } from "./views/Gallery";
 import { Modal } from "./views/Modal";
 import { Basket } from "./views/Basket";
+import { CardBasket } from "./views/Card/CardBasket";
 import { CardPreview } from "./views/Card/CardPreview";
+import { CardCatalog } from "./views/Card/CardCatalog";
 import { OrderForm } from "./views/Form/OrderForm";
 import { ContactsForm } from "./views/Form/ContactsForm";
 import { Success } from "./views/Success";
 
-import type { IProduct, IOrder } from "../types";
-import { API_URL } from "../utils/constants";
 import { cloneTemplate } from "../utils/utils";
+import type { IEvents } from "./base/Events";
+import type { IProduct, IOrder } from "../types";
 
-type ModalState = "none" | "preview" | "basket" | "order" | "contacts" | "success";
-
-function must<T>(v: T | null, name: string): T {
-  if (!v) throw new Error(`${name} not found`);
-  return v;
-}
+type ModalState =
+  | "none"
+  | "preview"
+  | "basket"
+  | "order"
+  | "contacts"
+  | "success";
 
 function findProduct(products: Products, id: string): IProduct {
   const p = products.getProductById(id);
@@ -48,34 +49,47 @@ export class Presenter {
   private readonly headerView: Header;
   private readonly galleryView: Gallery;
   private readonly modalView: Modal;
+  private readonly basketView: Basket;
+
+  private readonly previewView: CardPreview;
+  private readonly orderFormView: OrderForm;
+  private readonly contactsFormView: ContactsForm;
+  private readonly successView: Success;
 
   private modalState: ModalState = "none";
-  private selectedProductId: string | null = null;
 
-  constructor() {
-    // Брокер событий
-    this.events = new EventEmitter();
+  constructor(deps: {
+    events: IEvents;
+    server: Server;
+    products: Products;
+    cart: Cart;
+    order: Order;
+    headerView: Header;
+    galleryView: Gallery;
+    modalView: Modal;
+    basketView: Basket;
+    previewView: CardPreview;
+    orderFormView: OrderForm;
+    contactsFormView: ContactsForm;
+    successView: Success;
+  }) {
+    this.events = deps.events;
 
-    // Слой коммуникации (API/Server)
-    const api = new Api(API_URL);
-    this.server = new Server(api);
+    this.server = deps.server;
+    this.products = deps.products;
+    this.cart = deps.cart;
+    this.order = deps.order;
 
-    // Модели данных
-    this.products = new Products(this.events);
-    this.cart = new Cart(this.events);
-    this.order = new Order(this.events);
+    this.headerView = deps.headerView;
+    this.galleryView = deps.galleryView;
+    this.modalView = deps.modalView;
 
-    // Корневые DOM-элементы
-    const headerRoot = must(document.querySelector(".header"), ".header") as HTMLElement;
-    const galleryRoot = must(document.querySelector(".gallery"), ".gallery") as HTMLElement;
-    const modalRoot = must(document.querySelector(".modal"), ".modal") as HTMLElement;
+    this.basketView = deps.basketView;
+    this.previewView = deps.previewView;
+    this.orderFormView = deps.orderFormView;
+    this.contactsFormView = deps.contactsFormView;
+    this.successView = deps.successView;
 
-    // Компоненты представления (View)
-    this.headerView = new Header(headerRoot, this.events);
-    this.galleryView = new Gallery(galleryRoot, this.events);
-    this.modalView = new Modal(modalRoot, this.events);
-
-    // Подписки на события
     this.bindViewEvents();
     this.bindModelEvents();
   }
@@ -106,7 +120,6 @@ export class Presenter {
    */
   private bindViewEvents(): void {
     this.events.on("card:select", ({ id }: { id: string }) => {
-      this.selectedProductId = id;
       this.products.setSelectedProduct(findProduct(this.products, id));
     });
 
@@ -114,10 +127,14 @@ export class Presenter {
       this.openBasket();
     });
 
-    // В CardPreview всегда эмитится событие `basket:add`,
+    // В CardPreview эмитится событие `basket:toggle`,
     // поэтому здесь реализуем переключение: купить / удалить из корзины.
-    this.events.on("basket:add", ({ id }: { id: string }) => {
-      const product = findProduct(this.products, id);
+    this.events.on("basket:toggle", () => {
+      // Берём текущий выбранный продукт из модели.
+      const product = this.products.getSelectedProduct();
+      if (!product) return;
+
+      const id = product.id;
 
       if (this.cart.isProductInCart(id)) {
         this.cart.removeProduct(id);
@@ -125,7 +142,6 @@ export class Presenter {
         this.cart.addProduct(product);
       }
 
-      // По требованиям: после действия модальное окно закрывается.
       this.modalView.close();
       this.modalState = "none";
     });
@@ -138,17 +154,15 @@ export class Presenter {
       this.openOrderStep1();
     });
 
-    this.events.on("form:change", (data: Record<string, string>) => {
-      this.order.setOrderData(data);
+    this.events.on("form:change", (data: { field: string; value: string }) => {
+      this.order.setOrderData({ [data.field]: data.value });
     });
 
-    this.events.on("form:submit", (data: Record<string, string>) => {
-      this.order.setOrderData(data);
+    this.events.on("form:submit", () => {
       this.openOrderStep2();
     });
 
-    this.events.on("order:contact", (data: Record<string, string>) => {
-      this.order.setOrderData(data);
+    this.events.on("order:contact", () => {
       this.pay();
     });
 
@@ -172,7 +186,28 @@ export class Presenter {
    */
   private bindModelEvents(): void {
     this.events.on("catalog:changed", () => {
-      this.galleryView.display(this.products.getItems());
+      const items = this.products.getItems().map((product) => {
+        const root = cloneTemplate<HTMLElement>("#card-catalog");
+
+        const cardEl = root.classList.contains("card")
+          ? root
+          : (root.querySelector(".card") as HTMLElement | null);
+
+        if (!cardEl) {
+          throw new Error(".card not found in #card-catalog template");
+        }
+
+        const card = new CardCatalog(cardEl, this.events);
+        card.setTitle(product.title);
+        card.setImageUrl(product.image, product.title);
+        card.setPrice(product.price);
+        card.setCategory(product.category);
+        card.setId(product.id);
+
+        return root;
+      });
+
+      this.galleryView.items = items;
     });
 
     this.events.on("product:selected", ({ id }: { id: string }) => {
@@ -181,20 +216,39 @@ export class Presenter {
 
     this.events.on("cart:changed", () => {
       this.headerView.setBasketCounter(this.cart.getItemCount());
+      this.updateBasketView();
 
-      // Если сейчас открыта корзина — перерисуем её по событию модели (это разрешено требованиями).
+      // Если сейчас открыта корзина — перерисуем её по событию модели.
       if (this.modalState === "basket") {
         this.openBasket();
-      }
-
-      // Если открыт предпросмотр — обновим текст кнопки (Купить/Удалить).
-      if (this.modalState === "preview" && this.selectedProductId) {
-        this.openPreview(findProduct(this.products, this.selectedProductId));
       }
     });
 
     this.events.on("order:changed", () => {
-      // Формы валидируют себя сами, но событие изменения данных покупателя обязано существовать.
+      const buyer = this.order.getOrderData();
+      const errors = this.order.validateOrderData();
+
+      if (this.modalState === "order") {
+        this.orderFormView.setErrors({
+          payment: errors.payment || "",
+          address: errors.address || "",
+        });
+        this.orderFormView.setSubmitEnabled(!errors.payment && !errors.address);
+
+        this.orderFormView.setPayment(buyer.payment);
+        this.orderFormView.setAddress(buyer.address);
+      }
+
+      if (this.modalState === "contacts") {
+        this.contactsFormView.setErrors({
+          email: errors.email || "",
+          phone: errors.phone || "",
+        });
+        this.contactsFormView.setSubmitEnabled(!errors.email && !errors.phone);
+
+        this.contactsFormView.setEmail(buyer.email);
+        this.contactsFormView.setPhone(buyer.phone);
+      }
     });
   }
 
@@ -208,19 +262,16 @@ export class Presenter {
    * @returns void
    */
   private openPreview(product: IProduct): void {
-    const previewEl = cloneTemplate<HTMLElement>("#card-preview");
-    const preview = new CardPreview(previewEl, this.events);
-
-    preview.display(product);
+    const preview = this.previewView;
 
     // Кнопка по требованиям: Недоступно / Купить / Удалить.
     if (product.price === null) {
       preview.setButtonText("Недоступно");
-      preview.setButtonState(true);
+      preview.disabled = true;
     } else {
       const inCart = this.cart.isProductInCart(product.id);
       preview.setButtonText(inCart ? "Удалить из корзины" : "Купить");
-      preview.setButtonState(false);
+      preview.disabled = false;
     }
 
     this.modalView.setContent(preview.display(product));
@@ -233,12 +284,23 @@ export class Presenter {
    * @returns void
    */
   private openBasket(): void {
-    const basketEl = cloneTemplate<HTMLElement>("#basket");
-    const basketView = new Basket(basketEl, this.events);
+    this.updateBasketView();
 
-    this.modalView.setContent(basketView.display(this.cart));
+    this.modalView.setContent(this.basketView.render());
     this.modalView.open();
     this.modalState = "basket";
+  }
+
+  private updateBasketView(): void {
+    const items = this.cart.getProducts().map((product, index) => {
+      const itemEl = cloneTemplate<HTMLElement>("#card-basket");
+      const card = new CardBasket(itemEl, this.events);
+      return card.display(product, index + 1);
+    });
+
+    this.basketView.items = items;
+    this.basketView.total = this.cart.getTotalPrice();
+    this.basketView.disabled = items.length === 0;
   }
 
   /**
@@ -246,10 +308,14 @@ export class Presenter {
    * @returns void
    */
   private openOrderStep1(): void {
-    const orderEl = cloneTemplate<HTMLElement>("#order");
-    const orderForm = new OrderForm(orderEl, this.events);
+    const errors = this.order.validateOrderData();
+    this.orderFormView.setErrors({
+      payment: errors.payment || "",
+      address: errors.address || "",
+    });
+    this.orderFormView.setSubmitEnabled(!errors.payment && !errors.address);
 
-    this.modalView.setContent(orderForm.display());
+    this.modalView.setContent(this.orderFormView.render());
     this.modalView.open();
     this.modalState = "order";
   }
@@ -259,10 +325,14 @@ export class Presenter {
    * @returns void
    */
   private openOrderStep2(): void {
-    const contactsEl = cloneTemplate<HTMLElement>("#contacts");
-    const contactsForm = new ContactsForm(contactsEl, this.events);
+    const errors = this.order.validateOrderData();
+    this.contactsFormView.setErrors({
+      email: errors.email || "",
+      phone: errors.phone || "",
+    });
+    this.contactsFormView.setSubmitEnabled(!errors.email && !errors.phone);
 
-    this.modalView.setContent(contactsForm.display());
+    this.modalView.setContent(this.contactsFormView.render());
     this.modalView.open();
     this.modalState = "contacts";
   }
@@ -273,12 +343,9 @@ export class Presenter {
    * @returns void
    */
   private openSuccess(total: number): void {
-    const successEl = cloneTemplate<HTMLElement>("#success");
-    const successView = new Success(successEl, this.events);
+    this.successView.setTotal(total);
 
-    successView.setTotal(total);
-
-    this.modalView.setContent(successView.display());
+    this.modalView.setContent(this.successView.render());
     this.modalView.open();
     this.modalState = "success";
   }
@@ -302,8 +369,8 @@ export class Presenter {
 
     this.server
       .createOrder(payload)
-      .then(() => {
-        const total = this.cart.getTotalPrice();
+      .then((res) => {
+        const total = (res as any).total ?? this.cart.getTotalPrice();
         this.openSuccess(total);
 
         // Модели сами эмитят события об изменениях.

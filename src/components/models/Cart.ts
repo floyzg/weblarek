@@ -8,9 +8,9 @@ import { IEvents } from "../base/Events";
  * При любом изменении содержимого эмитит событие `cart:changed`.
  */
 export class Cart {
-  constructor(private events?: IEvents) {}
-
   private items: IProduct[] = [];
+
+  constructor(private events?: IEvents) {}
 
   /**
    * Возвращает список товаров в корзине.

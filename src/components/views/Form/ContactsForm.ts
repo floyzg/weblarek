@@ -3,7 +3,8 @@ import { IEvents } from "../../base/Events";
 
 /**
  * Форма ввода контактных данных покупателя.
- * Валидирует email и телефон, отправляет данные заказа.
+ * Не валидирует данные — только эмитит изменения полей.
+ * Валидация выполняется в модели Order, а ошибки прокидываются презентером.
  */
 export class ContactsForm extends Form {
   protected emailInput: HTMLInputElement;
@@ -26,78 +27,31 @@ export class ContactsForm extends Form {
       ".form__errors",
     ) as HTMLElement;
 
-    this.emailInput.addEventListener("change", () => {
-      // Локальная валидация + уведомление презентера об изменениях
-      this.validateForm();
-      this.onInputChange();
+    this.emailInput.addEventListener("input", () => {
+      this.onInputChange(this.emailInput);
     });
 
-    this.phoneInput.addEventListener("change", () => {
-      // Локальная валидация + уведомление презентера об изменениях
-      this.validateForm();
-      this.onInputChange();
+    this.phoneInput.addEventListener("input", () => {
+      this.onInputChange(this.phoneInput);
     });
   }
 
-  /**
-   * Валидирует форму контактов.
-   * Блокирует кнопку отправки и отображает ошибки.
-   * @returns void
-   */
-  validateForm(): void {
-    const email = this.emailInput.value.trim();
-    const phone = this.phoneInput.value.trim();
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^\+?[0-9\s()\-]{10,}$/;
-
-    if (!email) {
-      this.errorElement.textContent = "Необходимо указать email";
-      this.submitBtn.disabled = true;
-      return;
-    }
-
-    if (!emailRegex.test(email)) {
-      this.errorElement.textContent = "Некорректный email";
-      this.submitBtn.disabled = true;
-      return;
-    }
-
-    if (!phone) {
-      this.errorElement.textContent = "Необходимо указать телефон";
-      this.submitBtn.disabled = true;
-      return;
-    }
-
-    if (!phoneRegex.test(phone)) {
-      this.errorElement.textContent = "Некорректный номер телефона";
-      this.submitBtn.disabled = true;
-      return;
-    }
-
-    this.errorElement.textContent = "";
-    this.submitBtn.disabled = false;
-  }
-
-  /**
-   * Получает данные формы контактов.
-   * @returns Email и телефон.
-   */
-  getData(): Record<string, string> {
-    return {
-      email: this.emailInput.value,
-      phone: this.phoneInput.value,
-    };
-  }
+  // validateForm and getData removed, see reviewer requirements.
 
   /**
    * Обрабатывает отправку формы контактов.
    * @returns void
    */
   protected onSubmit(): void {
-    this.validateForm();
-    if (!this.submitBtn.disabled) {
-      const data = this.getData();
-      this.events.emit("order:contact", data);
-    }
+    // Форма не является источником данных при отправке
+    this.events.emit("order:contact");
+  }
+
+  setEmail(email: string): void {
+    this.emailInput.value = email ?? "";
+  }
+
+  setPhone(phone: string): void {
+    this.phoneInput.value = phone ?? "";
   }
 }

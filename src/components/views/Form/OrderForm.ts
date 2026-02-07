@@ -2,8 +2,9 @@ import { Form } from "./Form";
 import { IEvents } from "../../base/Events";
 
 /**
- * Форма оформления заказа.
- * Управляет выбором оплаты и адреса, валидацией и отправкой.
+ * Форма оформления заказа (шаг 1).
+ * Не валидирует данные и не хранит их — только эмитит изменения выбора оплаты/адреса.
+ * Валидация выполняется в модели Order, а ошибки прокидываются презентером.
  */
 export class OrderForm extends Form {
   protected paymentButtons: HTMLButtonElement[];
@@ -32,14 +33,19 @@ export class OrderForm extends Form {
         e.preventDefault();
         // Переключаем активную кнопку оплаты (это только UI-состояние формы)
         this.selectPayment(button.name);
-        this.onInputChange();
+        this.events.emit("form:change", {
+          field: "payment",
+          value: button.name,
+        });
       });
     });
 
     // Обработка изменения адреса
-    this.addressInput.addEventListener("change", () => {
-      this.validateForm();
-      this.onInputChange();
+    this.addressInput.addEventListener("input", () => {
+      this.events.emit("form:change", {
+        field: "address",
+        value: this.addressInput.value,
+      });
     });
   }
 
@@ -59,51 +65,25 @@ export class OrderForm extends Form {
   }
 
   /**
-   * Валидирует форму заказа.
-   * Блокирует кнопку отправки и отображает ошибки.
-   * @returns void
-   */
-  validateForm(): void {
-    const payment = this.paymentButtons.find((btn) =>
-      btn.classList.contains("button_alt-active"),
-    )?.name;
-    const address = this.addressInput.value.trim();
-
-    if (!address) {
-      this.errorElement.textContent = "Необходимо указать адрес";
-      this.submitBtn.disabled = true;
-    } else if (!payment) {
-      this.errorElement.textContent = "Необходимо выбрать способ оплаты";
-      this.submitBtn.disabled = true;
-    } else {
-      this.errorElement.textContent = "";
-      this.submitBtn.disabled = false;
-    }
-  }
-
-  /**
-   * Получает данные формы заказа.
-   * @returns Способ оплаты и адрес.
-   */
-  getData(): Record<string, string> {
-    const payment = this.paymentButtons.find((btn) =>
-      btn.classList.contains("button_alt-active"),
-    )?.name;
-    return {
-      payment: payment || "",
-      address: this.addressInput.value,
-    };
-  }
-
-  /**
    * Обрабатывает отправку формы заказа.
    * @returns void
    */
   protected onSubmit(): void {
-    this.validateForm();
-    if (!this.submitBtn.disabled) {
-      const data = this.getData();
-      this.events.emit("form:submit", data);
+    // Форма не является источником данных при отправке
+    this.events.emit("form:submit");
+  }
+
+  setPayment(method: string): void {
+    if (!method) {
+      this.paymentButtons.forEach((btn) =>
+        btn.classList.remove("button_alt-active"),
+      );
+      return;
     }
+    this.selectPayment(method);
+  }
+
+  setAddress(address: string): void {
+    this.addressInput.value = address ?? "";
   }
 }

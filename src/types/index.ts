@@ -56,3 +56,33 @@ export interface IOrderData extends IOrderForm {
   total: number;
   items: string[];
 }
+
+export type CardViewData = {
+  title: string;
+  price: number | null;
+  id: string;
+};
+
+export type FormViewData = {
+  errors: Record<string, string>;
+  submitEnabled: boolean;
+};
+
+export type GalleryViewData = {
+  items: HTMLElement[];
+};
+
+export type ModalViewData = {
+  content: HTMLElement;
+  opened: boolean;
+};
+
+export type SuccessViewData = {
+  total: number;
+};
+
+export type BasketViewData = {
+  items: HTMLElement[];
+  total: number;
+  disabled: boolean;
+};

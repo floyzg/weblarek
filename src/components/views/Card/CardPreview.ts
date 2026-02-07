@@ -5,11 +5,13 @@ import { IProduct } from "../../../types";
 /**
  * Карточка товара для предпросмотра.
  * Отвечает за отображение подробной информации о товаре и кнопку действия.
- * 
+ *
  * Важно: компонент не решает, добавлять товар или удалять — он только эмитит событие,
  * а решение принимает Презентер.
  */
 export class CardPreview extends Card {
+  protected image: HTMLImageElement;
+  protected category: HTMLElement;
   protected description: HTMLElement;
   protected button: HTMLButtonElement;
   protected events: IEvents;
@@ -17,6 +19,15 @@ export class CardPreview extends Card {
   constructor(container: HTMLElement, events: IEvents) {
     super(container);
     this.events = events;
+
+    const imgEl = this.container.querySelector(".card__image");
+    if (!imgEl) throw new Error("CardPreview: .card__image not found");
+    this.image = imgEl as HTMLImageElement;
+
+    const categoryEl = this.container.querySelector(".card__category");
+    if (!categoryEl) throw new Error("CardPreview: .card__category not found");
+    this.category = categoryEl as HTMLElement;
+
     this.description = this.container.querySelector(
       ".card__text",
     ) as HTMLElement;
@@ -27,8 +38,35 @@ export class CardPreview extends Card {
     this.button = buttonEl as HTMLButtonElement;
 
     this.button.addEventListener("click", () => {
-      this.events.emit("basket:add", { id: this.container.dataset.id });
+      this.events.emit("basket:toggle");
     });
+  }
+
+  setImageUrl(url: string, alt: string = ""): void {
+    this.image.src = url;
+    this.image.alt = alt;
+  }
+
+  setCategory(category: string): void {
+    this.category.textContent = category;
+
+    this.category.classList.remove(
+      "card__category_soft",
+      "card__category_hard",
+      "card__category_other",
+      "card__category_additional"
+    );
+
+    const c = category.toLowerCase();
+    if (c.includes("софт")) {
+      this.category.classList.add("card__category_soft");
+    } else if (c.includes("хард")) {
+      this.category.classList.add("card__category_hard");
+    } else if (c.includes("другое")) {
+      this.category.classList.add("card__category_other");
+    } else {
+      this.category.classList.add("card__category_additional");
+    }
   }
 
   /**
@@ -51,7 +89,7 @@ export class CardPreview extends Card {
    * Устанавливает состояние кнопки (активна/неактивна).
    * @param {boolean} disabled - true, если кнопка неактивна.
    */
-  setButtonState(disabled: boolean): void {
+  set disabled(disabled: boolean) {
     this.button.disabled = disabled;
   }
 
@@ -66,7 +104,6 @@ export class CardPreview extends Card {
     this.setPrice(product.price);
     this.setCategory(product.category);
     this.setDescription(product.description);
-    this.container.dataset.id = product.id;
     return this.container;
   }
 }

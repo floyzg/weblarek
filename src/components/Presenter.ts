@@ -162,6 +162,8 @@ export class Presenter {
     });
 
     this.events.on("order:open", () => {
+      // Начинаем оформление заново — не сохраняем прошлые введённые данные
+      this.order.clearOrderData();
       this.openOrderStep1();
     });
 
@@ -178,6 +180,20 @@ export class Presenter {
     });
 
     this.events.on("modal:close", () => {
+      // Если пользователь закрыл оформление — сбрасываем данные, чтобы не сохранять прошлый ввод
+      if (this.modalState === "order" || this.modalState === "contacts") {
+        this.order.clearOrderData();
+        this.orderFormView.setErrors({ payment: "", address: "" });
+        this.orderFormView.setSubmitEnabled(false);
+        this.orderFormView.setPayment("");
+        this.orderFormView.setAddress("");
+
+        this.contactsFormView.setErrors({ email: "", phone: "" });
+        this.contactsFormView.setSubmitEnabled(false);
+        this.contactsFormView.setEmail("");
+        this.contactsFormView.setPhone("");
+      }
+
       this.modalState = "none";
     });
 
@@ -236,29 +252,22 @@ export class Presenter {
     });
 
     this.events.on("order:changed", () => {
-      const buyer = this.order.getOrderData();
       const errors = this.order.validateOrderData();
 
       if (this.modalState === "order") {
         this.orderFormView.setErrors({
           payment: errors.payment || "",
-          address: errors.address || "",
+          address: errors.payment ? "" : errors.address || "",
         });
         this.orderFormView.setSubmitEnabled(!errors.payment && !errors.address);
-
-        this.orderFormView.setPayment(buyer.payment);
-        this.orderFormView.setAddress(buyer.address);
       }
 
       if (this.modalState === "contacts") {
         this.contactsFormView.setErrors({
           email: errors.email || "",
-          phone: errors.phone || "",
+          phone: errors.email ? "" : errors.phone || "",
         });
         this.contactsFormView.setSubmitEnabled(!errors.email && !errors.phone);
-
-        this.contactsFormView.setEmail(buyer.email);
-        this.contactsFormView.setPhone(buyer.phone);
       }
     });
   }
@@ -320,9 +329,12 @@ export class Presenter {
    */
   private openOrderStep1(): void {
     const errors = this.order.validateOrderData();
+    const buyer = this.order.getOrderData();
+    this.orderFormView.setPayment(buyer.payment);
+    this.orderFormView.setAddress(buyer.address);
     this.orderFormView.setErrors({
       payment: errors.payment || "",
-      address: errors.address || "",
+      address: errors.payment ? "" : errors.address || "",
     });
     this.orderFormView.setSubmitEnabled(!errors.payment && !errors.address);
 
@@ -337,9 +349,12 @@ export class Presenter {
    */
   private openOrderStep2(): void {
     const errors = this.order.validateOrderData();
+    const buyer = this.order.getOrderData();
+    this.contactsFormView.setEmail(buyer.email);
+    this.contactsFormView.setPhone(buyer.phone);
     this.contactsFormView.setErrors({
       email: errors.email || "",
-      phone: errors.phone || "",
+      phone: errors.email ? "" : errors.phone || "",
     });
     this.contactsFormView.setSubmitEnabled(!errors.email && !errors.phone);
 

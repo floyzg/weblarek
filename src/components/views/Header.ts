@@ -21,6 +21,7 @@ export class Header extends Component<HTMLElement> {
     ) as HTMLElement;
 
     this.basketButton.addEventListener("click", () => {
+      // Сообщаем презентеру, что пользователь открыл корзину
       events.emit("basket:open");
     });
   }

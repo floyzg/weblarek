@@ -21,6 +21,7 @@ export class Success extends Component<HTMLElement> {
     ) as HTMLButtonElement;
 
     this.closeButton.addEventListener("click", () => {
+      // Сообщаем презентеру, что пользователь закрыл экран успеха
       events.emit("success:close");
     });
   }

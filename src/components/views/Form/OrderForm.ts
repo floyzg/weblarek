@@ -30,6 +30,7 @@ export class OrderForm extends Form {
     this.paymentButtons.forEach((button) => {
       button.addEventListener("click", (e) => {
         e.preventDefault();
+        // Переключаем активную кнопку оплаты (это только UI-состояние формы)
         this.selectPayment(button.name);
         this.onInputChange();
       });
@@ -44,7 +45,8 @@ export class OrderForm extends Form {
 
   /**
    * Отмечает выбранный способ оплаты.
-   * @param {string} method - Название метода оплаты.
+   * @param method Название метода оплаты.
+   * @returns void
    */
   selectPayment(method: string): void {
     this.paymentButtons.forEach((btn) => {
@@ -59,6 +61,7 @@ export class OrderForm extends Form {
   /**
    * Валидирует форму заказа.
    * Блокирует кнопку отправки и отображает ошибки.
+   * @returns void
    */
   validateForm(): void {
     const payment = this.paymentButtons.find((btn) =>
@@ -80,7 +83,7 @@ export class OrderForm extends Form {
 
   /**
    * Получает данные формы заказа.
-   * @returns {Record<string, string>} Способ оплаты и адрес.
+   * @returns Способ оплаты и адрес.
    */
   getData(): Record<string, string> {
     const payment = this.paymentButtons.find((btn) =>
@@ -94,6 +97,7 @@ export class OrderForm extends Form {
 
   /**
    * Обрабатывает отправку формы заказа.
+   * @returns void
    */
   protected onSubmit(): void {
     this.validateForm();

@@ -25,10 +25,10 @@ export class Gallery extends Component<HTMLElement> {
     this.container.innerHTML = "";
 
     products.forEach((product) => {
-      // Берём готовый шаблон карточки каталога
+      // Клонируем шаблон карточки каталога (рендерим через template, а не через innerHTML)
       const root = cloneTemplate<HTMLElement>("#card-catalog");
 
-      // В разных версиях шаблона корнем может быть `.card` или обёртка с `.card` внутри
+      // В зависимости от шаблона корнем может быть `.card` или обёртка, внутри которой есть `.card`
       const cardEl = root.classList.contains("card")
         ? root
         : (root.querySelector(".card") as HTMLElement | null);
@@ -44,6 +44,7 @@ export class Gallery extends Component<HTMLElement> {
       card.setPrice(product.price);
       card.setCategory(product.category);
 
+      // Сохраняем id товара в dataset — обработчик клика в CardCatalog возьмёт его оттуда
       cardEl.dataset.id = product.id;
 
       // Добавляем карточку в галерею

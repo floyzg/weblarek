@@ -11,6 +11,10 @@ export class Form extends Component<HTMLElement> {
   protected events: IEvents;
   protected errors: Record<string, string> = {};
 
+  /**
+   * @param container Корневой элемент формы (из template).
+   * @param events Брокер событий для общения с презентером.
+   */
   constructor(container: HTMLElement, events: IEvents) {
     super(container);
     this.events = events;
@@ -22,17 +26,20 @@ export class Form extends Component<HTMLElement> {
     ) as HTMLButtonElement;
 
     this.container.addEventListener("submit", (e: SubmitEvent) => {
+      // Отменяем нативную отправку и работаем через события (MVP)
       e.preventDefault();
       this.onSubmit();
     });
 
     this.inputs.forEach((input) => {
+      // При каждом изменении поля отправляем частичные данные в презентер
       input.addEventListener("change", () => this.onInputChange());
     });
   }
 
   /**
    * Отправляет данные формы через событие.
+   * @returns void
    */
   protected onSubmit(): void {
     const data = this.getData();
@@ -41,6 +48,7 @@ export class Form extends Component<HTMLElement> {
 
   /**
    * Обрабатывает изменение данных формы.
+   * @returns void
    */
   protected onInputChange(): void {
     const data = this.getData();
@@ -49,7 +57,7 @@ export class Form extends Component<HTMLElement> {
 
   /**
    * Получает данные формы.
-   * @returns {Record<string, string>} Данные всех полей.
+   * @returns Данные всех полей.
    */
   getData(): Record<string, string> {
     const data: Record<string, string> = {};
@@ -61,7 +69,8 @@ export class Form extends Component<HTMLElement> {
 
   /**
    * Устанавливает ошибки для полей.
-   * @param {Record<string, string>} errors - Объект ошибок.
+   * @param errors Объект ошибок.
+   * @returns void
    */
   setErrors(errors: Record<string, string>): void {
     this.errors = errors;
@@ -76,6 +85,7 @@ export class Form extends Component<HTMLElement> {
 
   /**
    * Очищает все ошибки формы.
+   * @returns void
    */
   clearErrors(): void {
     this.inputs.forEach((input) => {
@@ -86,7 +96,7 @@ export class Form extends Component<HTMLElement> {
 
   /**
    * Отображает форму.
-   * @returns {HTMLElement} Элемент формы.
+   * @returns Элемент формы.
    */
   display(): HTMLElement {
     return this.container;

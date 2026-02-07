@@ -27,11 +27,13 @@ export class ContactsForm extends Form {
     ) as HTMLElement;
 
     this.emailInput.addEventListener("change", () => {
+      // Локальная валидация + уведомление презентера об изменениях
       this.validateForm();
       this.onInputChange();
     });
 
     this.phoneInput.addEventListener("change", () => {
+      // Локальная валидация + уведомление презентера об изменениях
       this.validateForm();
       this.onInputChange();
     });
@@ -40,6 +42,7 @@ export class ContactsForm extends Form {
   /**
    * Валидирует форму контактов.
    * Блокирует кнопку отправки и отображает ошибки.
+   * @returns void
    */
   validateForm(): void {
     const email = this.emailInput.value.trim();
@@ -77,7 +80,7 @@ export class ContactsForm extends Form {
 
   /**
    * Получает данные формы контактов.
-   * @returns {Record<string, string>} Email и телефон.
+   * @returns Email и телефон.
    */
   getData(): Record<string, string> {
     return {
@@ -88,6 +91,7 @@ export class ContactsForm extends Form {
 
   /**
    * Обрабатывает отправку формы контактов.
+   * @returns void
    */
   protected onSubmit(): void {
     this.validateForm();

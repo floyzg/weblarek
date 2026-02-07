@@ -1,49 +1,60 @@
 import { IProduct } from "../../types";
+import { IEvents } from "../base/Events";
 
 /**
  * Модель каталога товаров.
  * Управляет списком товаров и выбранным товаром.
+ * 
+ * Эмитит события:
+ * - `catalog:changed` — когда загружен/обновлён каталог;
+ * - `product:selected` — когда выбран товар для предпросмотра.
  */
 export class Products {
+  constructor(private events?: IEvents) {}
+
   private items: IProduct[] = [];
   private selectedItem: IProduct | null = null;
 
   /**
-   * Устанавливает список товаров.
-   * @param {IProduct[]} items - Массив товаров.
+   * Сохраняет список товаров в модели.
+   * Эмитит `catalog:changed`.
+   * @param items Массив товаров.
    */
   setItems(items: IProduct[]): void {
     this.items = items;
+    this.events?.emit("catalog:changed");
   }
 
   /**
-   * Возвращает список товаров.
-   * @returns {IProduct[]} Массив товаров.
+   * Возвращает список товаров каталога.
+   * @returns Массив товаров.
    */
-  getItems():  IProduct[] {
+  getItems(): IProduct[] {
     return this.items;
   }
 
   /**
-   * Находит товар по идентификатору.
-   * @param {string} id - Идентификатор товара.
-   * @returns {IProduct | null} Найденный товар или null.
+   * Ищет товар в каталоге по идентификатору.
+   * @param id Идентификатор товара.
+   * @returns Товар или null, если не найден.
    */
   getProductById(id: string): IProduct | null {
     return this.items.find((item) => item.id === id) || null;
   }
 
   /**
-   * Устанавливает выбранный товар.
-   * @param {IProduct} item - Товар для выбора.
+   * Устанавливает выбранный товар (для предпросмотра).
+   * Эмитит `product:selected`.
+   * @param item Выбранный товар.
    */
   setSelectedProduct(item: IProduct): void {
     this.selectedItem = item;
+    this.events?.emit("product:selected", { id: item.id });
   }
 
   /**
    * Возвращает выбранный товар.
-   * @returns {IProduct | null} Выбранный товар или null.
+   * @returns Выбранный товар или null.
    */
   getSelectedProduct(): IProduct | null {
     return this.selectedItem;

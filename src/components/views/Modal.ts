@@ -24,6 +24,7 @@ export class Modal extends Component<HTMLElement> {
     });
 
     this.container.addEventListener("click", (e: MouseEvent) => {
+      // Закрываем модалку по клику на подложку (вне контента)
       if (e.target === this.container) {
         this.close();
         events.emit("modal:close");
@@ -47,7 +48,9 @@ export class Modal extends Component<HTMLElement> {
 
   /**
    * Устанавливает содержимое модального окна.
-   * @param {HTMLElement} content - Новый контент.
+   * Полностью заменяет предыдущий контент.
+   * @param content Новый контент.
+   * @returns void
    */
   setContent(content: HTMLElement): void {
     this.content.innerHTML = "";

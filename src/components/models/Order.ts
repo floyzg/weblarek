@@ -1,68 +1,73 @@
 import { IBuyer, TPayment } from "../../types";
+import { IEvents } from "../base/Events";
 
 /**
- * Модель заказа.
- * Хранит и валидирует данные покупателя и способ оплаты.
+ * Модель оформления заказа.
+ * Хранит данные покупателя (оплата, адрес, контакты) и выполняет валидацию.
+ * 
+ * При любом изменении данных эмитит событие `order:changed`.
  */
 export class Order {
- private data: IBuyer = {
-  payment: "" as TPayment,
-  email: "",
-  phone: "",
-  address: ""
- };
+  constructor(private events?: IEvents) {}
 
- /**
-  * Устанавливает или обновляет данные заказа.
-  * @param {Partial<IBuyer>} data - Частичные данные заказа.
-  */
- setOrderData(data: Partial<IBuyer>): void {
-  this.data = { ...this.data, ...data };
- } 
+  private data: IBuyer = {
+    payment: "" as TPayment,
+    email: "",
+    phone: "",
+    address: "",
+  };
 
- /**
-  * Возвращает текущие данные заказа.
-  * @returns {IBuyer} Данные заказа.
-  */
-  getOrderData(): IBuyer {
-  return this.data;
+  /**
+   * Частично обновляет данные заказа.
+   * Эмитит `order:changed`.
+   * @param data Объект с изменёнными полями.
+   */
+  setOrderData(data: Partial<IBuyer>): void {
+    this.data = { ...this.data, ...data };
+    this.events?.emit("order:changed", { ...this.data });
   }
 
   /**
-   * Очищает данные заказа.
+   * Возвращает текущие данные заказа.
+   * @returns Данные покупателя.
+   */
+  getOrderData(): IBuyer {
+    return this.data;
+  }
+
+  /**
+   * Сбрасывает данные заказа к значениям по умолчанию.
+   * Эмитит `order:changed`.
    */
   clearOrderData(): void {
-  this.data = {
-   payment: "" as TPayment,
-   email: "",
-   phone: "",
-   address: ""
-  };
- }
-
- /**
-  * Валидирует данные заказа.
-  * @returns {Record<string, string>} Объект ошибок, если есть.
-  */
- validateOrderData(): { [key: string]: string } {
-  const errors: { [key: string]: string } = {};
-
-  if (!this.data.email) {
-   errors.email = "Некорректный email адрес";
+    this.data = {
+      payment: "" as TPayment,
+      email: "",
+      phone: "",
+      address: "",
+    };
+    this.events?.emit("order:changed", { ...this.data });
   }
 
-  if (!this.data.phone) {
-   errors.phone = "Некорректный номер телефона";
-  }
+  /**
+   * Валидирует данные заказа.
+   * @returns Объект ошибок, где ключ — имя поля, значение — текст ошибки.
+   */
+  validateOrderData(): { [key: string]: string } {
+    const errors: { [key: string]: string } = {};
 
-  if (!this.data.address || this.data.address.trim().length === 0) {
-   errors.address = "Необходимо указать адрес доставки";
-  }
+    if (!this.data.email) errors.email = "Некорректный email адрес";
+    if (!this.data.phone) errors.phone = "Некорректный номер телефона";
+    if (!this.data.address || this.data.address.trim().length === 0) {
+      errors.address = "Необходимо указать адрес доставки";
+    }
+    if (
+      !this.data.payment ||
+      (this.data.payment !== "card" && this.data.payment !== "cash")
+    ) {
+      errors.payment = "Необходимо выбрать способ оплаты";
+    }
 
-  if (!this.data.payment || (this.data.payment !== "card" && this.data.payment !== "cash")) {
-   errors.payment = "Необходимо выбрать способ оплаты";
+    return errors;
   }
-
-  return errors;
- }
 }

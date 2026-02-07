@@ -31,6 +31,7 @@ export class Basket extends Component<HTMLElement> {
     this.total = priceEl as HTMLElement;
 
     this.button.addEventListener("click", () => {
+      // Сообщаем презентеру, что пользователь начал оформление заказа
       events.emit("order:open");
     });
   }
@@ -64,6 +65,7 @@ export class Basket extends Component<HTMLElement> {
     });
 
     this.total.textContent = `${cart.getTotalPrice()} синапсов`;
+    // Если корзина пуста — оформление недоступно
     this.button.disabled = items.length === 0;
     return this.container;
   }

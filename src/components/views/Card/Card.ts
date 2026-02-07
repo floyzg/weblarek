@@ -60,7 +60,7 @@ export class Card extends Component<HTMLElement> {
   setCategory(category: string): void {
     this.category.textContent = category;
 
-    // categoryMap in constants already contains full modifier classes like 'card__category_soft'
+    // Используем общую карту категорий из constants, чтобы классы совпадали со стилями макета
     const modifierClass =
       (categoryMap as Record<string, string>)[category] || categoryMap["другое"];
 

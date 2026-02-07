@@ -4,7 +4,10 @@ import { IProduct } from "../../../types";
 
 /**
  * Карточка товара для предпросмотра.
- * Отвечает за отображение подробной информации и добавление в корзину.
+ * Отвечает за отображение подробной информации о товаре и кнопку действия.
+ * 
+ * Важно: компонент не решает, добавлять товар или удалять — он только эмитит событие,
+ * а решение принимает Презентер.
  */
 export class CardPreview extends Card {
   protected description: HTMLElement;
@@ -19,7 +22,7 @@ export class CardPreview extends Card {
     ) as HTMLElement;
     const buttonEl = this.container.querySelector(".card__button");
     if (!buttonEl) {
-      throw new Error("Card button not found in CardPreview template");
+      throw new Error("Кнопка действия не найдена в шаблоне CardPreview");
     }
     this.button = buttonEl as HTMLButtonElement;
 

@@ -33,7 +33,9 @@ function findProduct(products: Products, id: string): IProduct {
 
 /**
  * Презентер приложения (MVP).
- * Важно: презентер НЕ генерирует события — только слушает и реагирует.
+ *
+ * Важно: презентер НЕ генерирует события — он только подписывается на события
+ * от Представлений и Моделей и выполняет нужные действия.
  */
 export class Presenter {
   private readonly events: IEvents;
@@ -51,48 +53,57 @@ export class Presenter {
   private selectedProductId: string | null = null;
 
   constructor() {
-    // broker
+    // Брокер событий
     this.events = new EventEmitter();
 
-    // api/server
+    // Слой коммуникации (API/Server)
     const api = new Api(API_URL);
     this.server = new Server(api);
 
-    // models
+    // Модели данных
     this.products = new Products(this.events);
     this.cart = new Cart(this.events);
     this.order = new Order(this.events);
 
-    // roots
+    // Корневые DOM-элементы
     const headerRoot = must(document.querySelector(".header"), ".header") as HTMLElement;
     const galleryRoot = must(document.querySelector(".gallery"), ".gallery") as HTMLElement;
     const modalRoot = must(document.querySelector(".modal"), ".modal") as HTMLElement;
 
-    // views
+    // Компоненты представления (View)
     this.headerView = new Header(headerRoot, this.events);
     this.galleryView = new Gallery(galleryRoot, this.events);
     this.modalView = new Modal(modalRoot, this.events);
 
-    // subs
+    // Подписки на события
     this.bindViewEvents();
     this.bindModelEvents();
   }
 
+  /** Запускает приложение: загружает каталог и настраивает реакцию интерфейса. */
   init(): void {
     this.loadCatalog();
   }
 
+  /**
+   * Загружает список товаров с сервера и сохраняет его в модель каталога.
+   * Рендер каталога выполняется реакцией на событие модели `catalog:changed`.
+   */
   private loadCatalog(): void {
     this.server
       .getProducts()
       .then((items) => this.products.setItems(items))
-      .catch((err) => console.error("Products error:", err));
+      .catch((err) => console.error("Ошибка при загрузке каталога:", err));
   }
 
   // ---------------------------
-  // View -> Presenter
+  // События Представления → действия Презентера
   // ---------------------------
 
+  /**
+   * Подписывается на события пользовательского интерфейса.
+   * @returns void
+   */
   private bindViewEvents(): void {
     this.events.on("card:select", ({ id }: { id: string }) => {
       this.selectedProductId = id;
@@ -103,8 +114,8 @@ export class Presenter {
       this.openBasket();
     });
 
-    // В твоём CardPreview событие называется basket:add всегда,
-    // поэтому здесь делаем toggle купить/удалить.
+    // В CardPreview всегда эмитится событие `basket:add`,
+    // поэтому здесь реализуем переключение: купить / удалить из корзины.
     this.events.on("basket:add", ({ id }: { id: string }) => {
       const product = findProduct(this.products, id);
 
@@ -114,7 +125,7 @@ export class Presenter {
         this.cart.addProduct(product);
       }
 
-      // требование: после действия модалка закрывается
+      // По требованиям: после действия модальное окно закрывается.
       this.modalView.close();
       this.modalState = "none";
     });
@@ -152,9 +163,13 @@ export class Presenter {
   }
 
   // ---------------------------
-  // Model -> Presenter
+  // События Модели → обновление Представления
   // ---------------------------
 
+  /**
+   * Подписывается на события моделей и обновляет представления.
+   * @returns void
+   */
   private bindModelEvents(): void {
     this.events.on("catalog:changed", () => {
       this.galleryView.display(this.products.getItems());
@@ -167,33 +182,38 @@ export class Presenter {
     this.events.on("cart:changed", () => {
       this.headerView.setBasketCounter(this.cart.getItemCount());
 
-      // если корзина открыта — перерисуем её (по событию модели, это разрешено)
+      // Если сейчас открыта корзина — перерисуем её по событию модели (это разрешено требованиями).
       if (this.modalState === "basket") {
         this.openBasket();
       }
 
-      // если открыт preview — обновим кнопку (текст Купить/Удалить)
+      // Если открыт предпросмотр — обновим текст кнопки (Купить/Удалить).
       if (this.modalState === "preview" && this.selectedProductId) {
         this.openPreview(findProduct(this.products, this.selectedProductId));
       }
     });
 
     this.events.on("order:changed", () => {
-      // формы валидируют себя сами, но событие обязано существовать
+      // Формы валидируют себя сами, но событие изменения данных покупателя обязано существовать.
     });
   }
 
   // ---------------------------
-  // Modal helpers
+  // Хелперы открытия модальных окон
   // ---------------------------
 
+  /**
+   * Открывает модальное окно предпросмотра товара.
+   * @param product Товар для предпросмотра.
+   * @returns void
+   */
   private openPreview(product: IProduct): void {
     const previewEl = cloneTemplate<HTMLElement>("#card-preview");
     const preview = new CardPreview(previewEl, this.events);
 
     preview.display(product);
 
-    // кнопка по требованиям
+    // Кнопка по требованиям: Недоступно / Купить / Удалить.
     if (product.price === null) {
       preview.setButtonText("Недоступно");
       preview.setButtonState(true);
@@ -208,6 +228,10 @@ export class Presenter {
     this.modalState = "preview";
   }
 
+  /**
+   * Открывает модальное окно корзины.
+   * @returns void
+   */
   private openBasket(): void {
     const basketEl = cloneTemplate<HTMLElement>("#basket");
     const basketView = new Basket(basketEl, this.events);
@@ -217,6 +241,10 @@ export class Presenter {
     this.modalState = "basket";
   }
 
+  /**
+   * Открывает модальное окно формы заказа (шаг 1).
+   * @returns void
+   */
   private openOrderStep1(): void {
     const orderEl = cloneTemplate<HTMLElement>("#order");
     const orderForm = new OrderForm(orderEl, this.events);
@@ -226,6 +254,10 @@ export class Presenter {
     this.modalState = "order";
   }
 
+  /**
+   * Открывает модальное окно формы ввода контактов (шаг 2).
+   * @returns void
+   */
   private openOrderStep2(): void {
     const contactsEl = cloneTemplate<HTMLElement>("#contacts");
     const contactsForm = new ContactsForm(contactsEl, this.events);
@@ -235,6 +267,11 @@ export class Presenter {
     this.modalState = "contacts";
   }
 
+  /**
+   * Открывает окно успешного оформления заказа.
+   * @param total Итоговая сумма заказа.
+   * @returns void
+   */
   private openSuccess(total: number): void {
     const successEl = cloneTemplate<HTMLElement>("#success");
     const successView = new Success(successEl, this.events);
@@ -247,9 +284,13 @@ export class Presenter {
   }
 
   // ---------------------------
-  // Payment
+  // Оплата и отправка заказа
   // ---------------------------
 
+  /**
+   * Отправляет заказ на сервер и открывает окно успеха.
+   * @returns void
+   */
   private pay(): void {
     const buyer = this.order.getOrderData();
 
@@ -265,10 +306,10 @@ export class Presenter {
         const total = this.cart.getTotalPrice();
         this.openSuccess(total);
 
-        // модели сами эмитят события
+        // Модели сами эмитят события об изменениях.
         this.cart.clearCart();
         this.order.clearOrderData();
       })
-      .catch((err) => console.error("Order error:", err));
+      .catch((err) => console.error("Ошибка при оформлении заказа:", err));
   }
 }

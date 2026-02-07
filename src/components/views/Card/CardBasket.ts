@@ -1,3 +1,4 @@
+import { IProduct } from "../../../types";
 import { Card } from "./Card";
 import { IEvents } from "../../base/Events";
 
@@ -35,11 +36,11 @@ export class CardBasket extends Card {
 
   /**
    * Отображает карточку товара в корзине.
-   * @param {any} product - Данные товара.
-   * @param {number} index - Индекс товара.
-   * @returns {HTMLElement} Элемент карточки.
+   * @param product Данные товара.
+   * @param index Порядковый номер в корзине (начиная с 1).
+   * @returns Элемент карточки.
    */
-  display(product: any, index: number): HTMLElement {
+  display(product: IProduct, index: number): HTMLElement {
     this.setTitle(product.title);
     this.setPrice(product.price);
     this.setIndex(index);

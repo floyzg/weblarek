@@ -12,6 +12,7 @@ export class CardCatalog extends Card {
     super(container);
     this.events = events;
     this.container.addEventListener("click", () => {
+      // Сообщаем презентеру, что пользователь выбрал карточку для предпросмотра
       this.events.emit("card:select", { id: this.container.dataset.id });
     });
   }

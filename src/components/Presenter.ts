@@ -17,6 +17,7 @@ import { Success } from "./views/Success";
 import { cloneTemplate } from "../utils/utils";
 import type { IEvents } from "./base/Events";
 import type { IProduct, IOrder } from "../types";
+import { CDN_URL } from "../utils/constants";
 
 type ModalState =
   | "none"
@@ -106,7 +107,17 @@ export class Presenter {
   private loadCatalog(): void {
     this.server
       .getProducts()
-      .then((items) => this.products.setItems(items))
+      .then((items) =>
+        this.products.setItems(
+          items.map((item) => ({
+            ...item,
+            image:
+              item.image && /^https?:\/\//.test(item.image)
+                ? item.image
+                : `${CDN_URL}${item.image}`,
+          })),
+        ),
+      )
       .catch((err) => console.error("Ошибка при загрузке каталога:", err));
   }
 

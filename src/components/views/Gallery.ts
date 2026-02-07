@@ -2,7 +2,7 @@ import { Component } from "../base/Component";
 import { IEvents } from "../base/Events";
 import { IProduct } from "../../types";
 import { CardCatalog } from "./Card/CardCatalog";
-import { CDN_URL, categoryMap } from "../../utils/constants";
+import { cloneTemplate } from "../../utils/utils";
 
 /**
  * Представление галереи товаров.
@@ -25,29 +25,32 @@ export class Gallery extends Component<HTMLElement> {
     this.container.innerHTML = "";
 
     products.forEach((product) => {
-      const cardElement = document.createElement("div");
-      cardElement.className = "gallery__item";
+      // Берём готовый шаблон карточки каталога
+      const root = cloneTemplate<HTMLElement>("#card-catalog");
 
-      const imageUrl = `${CDN_URL}/${product.image}`;
-      const modifierClass =
-        (categoryMap as Record<string, string>)[product.category] || categoryMap["другое"];
+      // В разных версиях шаблона корнем может быть `.card` или обёртка с `.card` внутри
+      const cardEl = root.classList.contains("card")
+        ? root
+        : (root.querySelector(".card") as HTMLElement | null);
 
-      cardElement.innerHTML = `
-        <div class="card">
-          <span class="card__category ${modifierClass}">${product.category}</span>
-          <h2 class="card__title">${product.title}</h2>
-          <img src="${imageUrl}" alt="${product.title}" class="card__image">
-          <p class="card__price">${product.price === null ? "Бесценно" : product.price + " синапсов"}</p>
-        </div>
-      `;
+      if (!cardEl) {
+        throw new Error(".card not found in #card-catalog template");
+      }
 
-      const card = new CardCatalog(
-        cardElement.querySelector(".card") as HTMLElement,
-        this.events,
-      );
-      (card as any).container.dataset.id = product.id;
+      // Компонент карточки + обработчик выбора уже внутри CardCatalog
+      const card = new CardCatalog(cardEl, this.events);
 
-      this.container.appendChild(cardElement);
+      // Данные: View хранит только DOM, данные приходят аргументами
+      card.setTitle(product.title);
+      card.setImageUrl(product.image, product.title);
+      card.setPrice(product.price);
+      card.setCategory(product.category);
+
+      // id для событий
+      cardEl.dataset.id = product.id;
+
+      // Добавляем карточку в галерею
+      this.container.appendChild(root);
     });
 
     return this.container;

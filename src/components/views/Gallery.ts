@@ -37,16 +37,13 @@ export class Gallery extends Component<HTMLElement> {
         throw new Error(".card not found in #card-catalog template");
       }
 
-      // Компонент карточки + обработчик выбора уже внутри CardCatalog
       const card = new CardCatalog(cardEl, this.events);
 
-      // Данные: View хранит только DOM, данные приходят аргументами
       card.setTitle(product.title);
       card.setImageUrl(product.image, product.title);
       card.setPrice(product.price);
       card.setCategory(product.category);
 
-      // id для событий
       cardEl.dataset.id = product.id;
 
       // Добавляем карточку в галерею

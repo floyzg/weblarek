@@ -8,7 +8,7 @@ import type { CardViewData } from "../../../types";
 export class Card extends Component<CardViewData> {
   protected title: HTMLElement;
   protected price: HTMLElement;
-  protected productId: string | null = null;
+
 
   constructor(container: HTMLElement) {
     super(container);
@@ -34,23 +34,5 @@ export class Card extends Component<CardViewData> {
     } else {
       this.price.textContent = `${price} синапсов`;
     }
-  }
-
-  /**
-   * Сохраняет id товара внутри компонента (UI-состояние).
-   * Представление не должно брать данные из DOM (dataset).
-   */
-  setId(id: string): void {
-    this.productId = id;
-  }
-
-  /**
-   * Возвращает сохранённый id товара.
-   */
-  getId(): string {
-    if (!this.productId) {
-      throw new Error("Product id is not set in Card");
-    }
-    return this.productId;
   }
 }

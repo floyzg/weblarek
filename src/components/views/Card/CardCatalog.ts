@@ -1,18 +1,18 @@
 import { Card } from "./Card";
-import { IEvents } from "../../base/Events";
 
 /**
  * Карточка товара в каталоге.
  * Отвечает за отображение товара и обработку выбора.
+ * Не хранит данные товара, сообщает о клике через колбэк.
  */
 export class CardCatalog extends Card {
-  protected events: IEvents;
+  protected onClick: () => void;
   protected image: HTMLImageElement;
   protected category: HTMLElement;
 
-  constructor(container: HTMLElement, events: IEvents) {
+  constructor(container: HTMLElement, actions: { onClick: () => void }) {
     super(container);
-    this.events = events;
+    this.onClick = actions.onClick;
 
     const imgEl = this.container.querySelector(".card__image");
     if (!imgEl) throw new Error("CardCatalog: .card__image not found");
@@ -23,16 +23,26 @@ export class CardCatalog extends Card {
     this.category = categoryEl as HTMLElement;
 
     this.container.addEventListener("click", () => {
-      // Сообщаем презентеру, что пользователь выбрал карточку для предпросмотра
-      this.events.emit("card:select", { id: this.getId() });
+      this.onClick();
     });
   }
 
+  /**
+   * Устанавливает картинку карточки.
+   * @param url Ссылка на изображение.
+   * @param alt Текст для атрибута alt.
+   * @returns void
+   */
   setImageUrl(url: string, alt: string = ""): void {
     this.image.src = url;
     this.image.alt = alt;
   }
 
+  /**
+   * Устанавливает категорию товара и CSS-модификатор.
+   * @param category Название категории.
+   * @returns void
+   */
   setCategory(category: string): void {
     this.category.textContent = category;
 
@@ -40,7 +50,7 @@ export class CardCatalog extends Card {
       "card__category_soft",
       "card__category_hard",
       "card__category_other",
-      "card__category_additional"
+      "card__category_additional",
     );
 
     const c = category.toLowerCase();

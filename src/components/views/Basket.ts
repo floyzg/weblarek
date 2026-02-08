@@ -36,30 +36,38 @@ export class Basket extends Component<BasketViewData> {
     });
   }
 
- /**
- * Устанавливает разметку элементов корзины.
- * Представление не строит разметку само, получает готовые элементы.
- */
-set items(items: HTMLElement[]) {
-  this.list.replaceChildren(...items);
-}
+  /**
+   * Устанавливает разметку элементов корзины.
+   * Представление не строит разметку само — получает готовые элементы.
+   * @param items Готовые элементы списка.
+   */
+  set items(items: HTMLElement[]) {
+    this.list.replaceChildren(...items);
+  }
 
-/** Устанавливает итоговую сумму. */
-set total(total: number) {
-  this.totalEl.textContent = `${total} синапсов`;
-}
+  /**
+   * Устанавливает итоговую сумму.
+   * @param total Сумма в синапсах.
+   */
+  set total(total: number) {
+    this.totalEl.textContent = `${total} синапсов`;
+  }
 
-/** Управляет доступностью кнопки оформления. */
-set disabled(disabled: boolean) {
-  this.button.disabled = disabled;
-}
+  /**
+   * Управляет доступностью кнопки оформления.
+   * @param disabled true — кнопка заблокирована.
+   */
+  set disabled(disabled: boolean) {
+    this.button.disabled = disabled;
+  }
 
-// Алиасы для обратной совместимости (можно удалить позже)
-set totalPrice(total: number) {
-  this.total = total;
-}
+  /** @deprecated Используйте сеттер total */
+  set totalPrice(total: number) {
+    this.total = total;
+  }
 
-set isCheckoutDisabled(disabled: boolean) {
-  this.disabled = disabled;
-}
+  /** @deprecated Используйте сеттер disabled */
+  set isCheckoutDisabled(disabled: boolean) {
+    this.disabled = disabled;
+  }
 }

@@ -1,6 +1,5 @@
 import { IProduct } from "../../../types";
 import { Card } from "./Card";
-import { IEvents } from "../../base/Events";
 
 /**
  * Карточка товара в корзине.
@@ -9,11 +8,12 @@ import { IEvents } from "../../base/Events";
 export class CardBasket extends Card {
   protected index: HTMLElement;
   protected button: HTMLButtonElement;
-  protected events: IEvents;
+  protected onRemove: () => void;
 
-  constructor(container: HTMLElement, events: IEvents) {
+  constructor(container: HTMLElement, actions: { onRemove: () => void }) {
     super(container);
-    this.events = events;
+    this.onRemove = actions.onRemove;
+
     this.index = this.container.querySelector(
       ".basket__item-index",
     ) as HTMLElement;
@@ -22,7 +22,7 @@ export class CardBasket extends Card {
     ) as HTMLButtonElement;
 
     this.button.addEventListener("click", () => {
-      this.events.emit("basket:remove", { id: this.getId() });
+      this.onRemove();
     });
   }
 
@@ -44,7 +44,6 @@ export class CardBasket extends Card {
     this.setTitle(product.title);
     this.setPrice(product.price);
     this.setIndex(index);
-    this.setId(product.id);
     return this.container;
   }
 }

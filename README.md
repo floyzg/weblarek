@@ -330,7 +330,7 @@ type TPayment = "card" | "cash";
 - `counter: HTMLElement` — счётчик товаров в корзине
 
 **Методы:**
-- `setBasketCounter(count: number): void` — обновляет значение счётчика корзины
+- `counter: number` (setter) — обновляет значение счётчика корзины
 
 ### Класс Gallery
 
@@ -345,7 +345,7 @@ type TPayment = "card" | "cash";
 - `container: HTMLElement` — корневой элемент галереи
 
 **Методы:**
-- `display(items: IProduct[]): HTMLElement` — рендерит карточки товаров каталога
+- `items: HTMLElement[]` (setter) — устанавливает готовую разметку каталога
 
 ### Класс Basket
 
@@ -362,7 +362,9 @@ type TPayment = "card" | "cash";
 - `button: HTMLButtonElement` — кнопка оформления заказа
 
 **Методы:**
-- `display(items: IProduct[], total: number): HTMLElement` — отображает содержимое корзины
+- `items: HTMLElement[]` (setter) — устанавливает готовые элементы корзины
+- `total: number` (setter) — устанавливает итоговую сумму
+- `disabled: boolean` (setter) — управляет доступностью кнопки оформления
 
 ### Класс Success
 
@@ -378,7 +380,7 @@ type TPayment = "card" | "cash";
 - `closeButton: HTMLButtonElement` — кнопка закрытия
 
 **Методы:**
-- `display(total: number): HTMLElement` — отображает сообщение об успешной покупке
+- `setTotal(total: number): void` — устанавливает итоговую сумму заказа
 
 ### Карточки товара (Card)
 
@@ -392,7 +394,7 @@ type TPayment = "card" | "cash";
 
 **Общий интерфейс карточек:**
 - `display(product: IProduct): HTMLElement` — отрисовка карточки товара
-- события пользовательских действий эмитятся через `IEvents`
+- события пользовательских действий передаются через колбэки или EventEmitter (в зависимости от типа карточки)
 
 ### Формы оформления заказа (Form)
 
@@ -402,9 +404,9 @@ type TPayment = "card" | "cash";
 - `ContactsForm` — шаг 2 (почта + телефон)
 
 **Общий интерфейс форм:**
-- `getData(): Partial<IBuyer>` — возвращает данные формы
-- `validateForm(): boolean` — выполняет локальную валидацию
-- `display(): HTMLElement` — отрисовывает форму
+- формы не хранят данные и не валидируют их
+- изменения полей эмитятся событием `form:change`
+- отправка формы эмитит `form:submit` или `order:contact`
 
 ---
 
@@ -436,10 +438,8 @@ type TPayment = "card" | "cash";
 
 ### События представлений (View → Presenter)
 
-- `card:select` — пользователь выбрал карточку товара
 - `basket:open` — пользователь открыл корзину
-- `basket:add` — кнопка действия в предпросмотре (презентер решает: купить/удалить)
-- `basket:remove` — удалить товар из корзины
+- `basket:toggle` — кнопка действия в предпросмотре (купить / удалить)
 - `order:open` — начать оформление заказа
 - `form:change` — изменение данных в формах
 - `form:submit` — переход ко второму шагу оформления

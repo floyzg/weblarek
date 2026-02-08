@@ -86,3 +86,6 @@ export type BasketViewData = {
   total: number;
   disabled: boolean;
 };
+export type HeaderViewData = {
+  counter: number;
+};

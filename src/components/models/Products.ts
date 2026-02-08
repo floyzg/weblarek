@@ -43,17 +43,18 @@ export class Products {
   }
 
   /**
-   * Устанавливает выбранный товар (для предпросмотра).
-   * Эмитит `product:selected`.
+   * Устанавливает выбранный товар для предпросмотра.
+   * Эмитит `product:selected` без payload (презентер берёт данные из модели).
    * @param item Выбранный товар.
+   * @returns void
    */
   setSelectedProduct(item: IProduct): void {
     this.selectedItem = item;
-    this.events?.emit("product:selected", { id: item.id });
+    this.events?.emit("product:selected");
   }
 
   /**
-   * Возвращает выбранный товар.
+   * Возвращает текущий выбранный товар.
    * @returns Выбранный товар или null.
    */
   getSelectedProduct(): IProduct | null {

@@ -29,7 +29,8 @@ export class Success extends Component<SuccessViewData> {
 
   /**
    * Устанавливает итоговую сумму заказа.
-   * @param {number} total - Сумма заказа.
+   * @param total Сумма заказа.
+   * @returns void
    */
   setTotal(total: number): void {
     this.description.textContent = `Списано ${total} синапсов`;

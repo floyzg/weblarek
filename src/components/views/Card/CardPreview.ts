@@ -5,9 +5,7 @@ import { IProduct } from "../../../types";
 /**
  * Карточка товара для предпросмотра.
  * Отвечает за отображение подробной информации о товаре и кнопку действия.
- *
- * Важно: компонент не решает, добавлять товар или удалять — он только эмитит событие,
- * а решение принимает Презентер.
+ * Компонент не решает бизнес-логику — он только сообщает о нажатии кнопки.
  */
 export class CardPreview extends Card {
   protected image: HTMLImageElement;
@@ -42,11 +40,22 @@ export class CardPreview extends Card {
     });
   }
 
+  /**
+   * Устанавливает картинку товара.
+   * @param url Ссылка на изображение.
+   * @param alt Текст для alt.
+   * @returns void
+   */
   setImageUrl(url: string, alt: string = ""): void {
     this.image.src = url;
     this.image.alt = alt;
   }
 
+  /**
+   * Устанавливает категорию товара и CSS-модификатор.
+   * @param category Название категории.
+   * @returns void
+   */
   setCategory(category: string): void {
     this.category.textContent = category;
 
@@ -86,8 +95,8 @@ export class CardPreview extends Card {
   }
 
   /**
-   * Устанавливает состояние кнопки (активна/неактивна).
-   * @param {boolean} disabled - true, если кнопка неактивна.
+   * Управляет доступностью кнопки.
+   * @param disabled true — кнопка неактивна.
    */
   set disabled(disabled: boolean) {
     this.button.disabled = disabled;

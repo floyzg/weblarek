@@ -19,16 +19,6 @@ import type { IEvents } from "./base/Events";
 import type { IProduct, IOrder } from "../types";
 import { CDN_URL } from "../utils/constants";
 
-type ModalState =
-  | "none"
-  | "preview"
-  | "basket"
-  | "order"
-  | "contacts"
-  | "success";
-
-
-
 /**
  * Презентер приложения (MVP).
  *
@@ -52,8 +42,6 @@ export class Presenter {
   private readonly orderFormView: OrderForm;
   private readonly contactsFormView: ContactsForm;
   private readonly successView: Success;
-
-  private modalState: ModalState = "none";
 
   constructor(deps: {
     events: IEvents;
@@ -132,7 +120,6 @@ export class Presenter {
    * @returns void
    */
   private bindViewEvents(): void {
-
     this.events.on("basket:open", () => {
       this.openBasket();
     });
@@ -140,26 +127,21 @@ export class Presenter {
     // В CardPreview эмитится событие `basket:toggle`,
     // поэтому здесь реализуем переключение: купить / удалить из корзины.
     this.events.on("basket:toggle", () => {
-      // Берём текущий выбранный продукт из модели.
       const product = this.products.getSelectedProduct();
       if (!product) return;
 
-      const id = product.id;
-
-      if (this.cart.isProductInCart(id)) {
-        this.cart.removeProduct(id);
+      if (this.cart.isProductInCart(product.id)) {
+        this.cart.removeProduct(product.id);
       } else {
         this.cart.addProduct(product);
       }
 
       this.modalView.close();
-      this.modalState = "none";
     });
-
     this.events.on("order:open", () => {
-      // Открываем шаг 1 и сбрасываем модель — UI обновится по событию order:changed
-      this.openOrderStep1();
+      // При открытии формы очищаем модель — UI обновится по событию `order:changed`
       this.order.clearOrderData();
+      this.openOrderStep1();
     });
 
     this.events.on("form:change", (data: { field: string; value: string }) => {
@@ -167,31 +149,17 @@ export class Presenter {
     });
 
     this.events.on("form:submit", () => {
-      // Переходим на следующий шаг только если модель валидна для шага 1
-      const errors = this.order.validateOrderData();
-      if (errors.payment || errors.address) return;
+      // Проверки валидации здесь не нужны — невалидная форма не должна отправляться (кнопка disabled)
       this.openOrderStep2();
     });
 
     this.events.on("order:contact", () => {
-      // Отправляем заказ только если валидны контакты
-      const errors = this.order.validateOrderData();
-      if (errors.email || errors.phone) return;
+      // Проверки валидации здесь не нужны — невалидная форма не должна отправляться (кнопка disabled)
       this.pay();
-    });
-
-    this.events.on("modal:close", () => {
-      // Если пользователь закрыл оформление — сбрасываем модель, а UI обновится через order:changed
-      if (this.modalState === "order" || this.modalState === "contacts") {
-        this.order.clearOrderData();
-      }
-
-      this.modalState = "none";
     });
 
     this.events.on("success:close", () => {
       this.modalView.close();
-      this.modalState = "none";
     });
   }
 
@@ -221,6 +189,7 @@ export class Presenter {
         const card = new CardCatalog(cardEl, {
           onClick: () => this.products.setSelectedProduct(product),
         });
+
         card.setTitle(product.title);
         card.setImageUrl(product.image, product.title);
         card.setPrice(product.price);
@@ -241,42 +210,33 @@ export class Presenter {
     this.events.on("cart:changed", () => {
       this.headerView.counter = this.cart.getItemCount();
       this.updateBasketView();
-
-      // Если сейчас открыта корзина — перерисуем её по событию модели.
-      if (this.modalState === "basket") {
-        this.openBasket();
-      }
     });
 
     this.events.on("order:changed", () => {
       const buyer = this.order.getOrderData();
       const errors = this.order.validateOrderData();
 
-      if (this.modalState === "order") {
-        // Обновляем значения полей из модели
-        this.orderFormView.setPayment(buyer.payment);
-        this.orderFormView.setAddress(buyer.address);
+      // Шаг 1 (оплата/адрес)
+      this.orderFormView.setPayment(buyer.payment);
+      this.orderFormView.setAddress(buyer.address);
 
-        // Ошибки последовательно: сначала оплата, затем адрес
-        this.orderFormView.setErrors({
-          payment: errors.payment || "",
-          address: errors.payment ? "" : errors.address || "",
-        });
-        this.orderFormView.setSubmitEnabled(!errors.payment && !errors.address);
-      }
+      // Ошибки последовательно: сначала оплата, затем адрес
+      this.orderFormView.setErrors({
+        payment: errors.payment || "",
+        address: errors.payment ? "" : errors.address || "",
+      });
+      this.orderFormView.setSubmitEnabled(!errors.payment && !errors.address);
 
-      if (this.modalState === "contacts") {
-        // Обновляем значения полей из модели
-        this.contactsFormView.setEmail(buyer.email);
-        this.contactsFormView.setPhone(buyer.phone);
+      // Шаг 2 (контакты)
+      this.contactsFormView.setEmail(buyer.email);
+      this.contactsFormView.setPhone(buyer.phone);
 
-        // Ошибки последовательно: сначала email, затем телефон
-        this.contactsFormView.setErrors({
-          email: errors.email || "",
-          phone: errors.email ? "" : errors.phone || "",
-        });
-        this.contactsFormView.setSubmitEnabled(!errors.email && !errors.phone);
-      }
+      // Ошибки последовательно: сначала email, затем телефон
+      this.contactsFormView.setErrors({
+        email: errors.email || "",
+        phone: errors.email ? "" : errors.phone || "",
+      });
+      this.contactsFormView.setSubmitEnabled(!errors.email && !errors.phone);
     });
   }
 
@@ -292,7 +252,6 @@ export class Presenter {
   private openPreview(product: IProduct): void {
     const preview = this.previewView;
 
-    // Кнопка по требованиям: Недоступно / Купить / Удалить.
     if (product.price === null) {
       preview.setButtonText("Недоступно");
       preview.disabled = true;
@@ -304,7 +263,6 @@ export class Presenter {
 
     this.modalView.setContent(preview.display(product));
     this.modalView.open();
-    this.modalState = "preview";
   }
 
   /**
@@ -313,10 +271,8 @@ export class Presenter {
    */
   private openBasket(): void {
     this.updateBasketView();
-
     this.modalView.setContent(this.basketView.render());
     this.modalView.open();
-    this.modalState = "basket";
   }
 
   /**
@@ -340,24 +296,22 @@ export class Presenter {
 
   /**
    * Открывает модальное окно формы заказа (шаг 1).
-   * В этом методе только render/open/state — значения/ошибки обновляются по `order:changed`.
+   * В этом методе только render/open — значения/ошибки обновляются по `order:changed`.
    * @returns void
    */
   private openOrderStep1(): void {
     this.modalView.setContent(this.orderFormView.render());
     this.modalView.open();
-    this.modalState = "order";
   }
 
   /**
    * Открывает модальное окно формы контактов (шаг 2).
-   * В этом методе только render/open/state — значения/ошибки обновляются по `order:changed`.
+   * В этом методе только render/open — значения/ошибки обновляются по `order:changed`.
    * @returns void
    */
   private openOrderStep2(): void {
     this.modalView.setContent(this.contactsFormView.render());
     this.modalView.open();
-    this.modalState = "contacts";
   }
 
   /**
@@ -367,10 +321,8 @@ export class Presenter {
    */
   private openSuccess(total: number): void {
     this.successView.setTotal(total);
-
     this.modalView.setContent(this.successView.render());
     this.modalView.open();
-    this.modalState = "success";
   }
 
   // ---------------------------
@@ -395,8 +347,6 @@ export class Presenter {
       .createOrder(payload)
       .then((res) => {
         this.openSuccess(res.total);
-
-        // Модели сами эмитят события об изменениях.
         this.cart.clearCart();
         this.order.clearOrderData();
       })
